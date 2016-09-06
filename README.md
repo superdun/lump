@@ -34,10 +34,10 @@ https://zh.wikipedia.org/wiki/%E9%BE%99%E6%A0%BC%EF%BC%8D%E5%BA%93%E5%A1%94%E6%B
 |accuracy|变步长的精确度|
 
 ##4. example:
-'''python
+``` python
 from RK4 import RK
 def func(x,y):
 	return -y
 rk = RK(func)
 print rk.implicitRK4(0,1,0.1,1,0.00000000000001)
-'''
+```
