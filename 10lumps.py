@@ -28,7 +28,7 @@ class lumpModel(object):
     def funcNitro(self, k_nitroAdsorbDeact,w_nitro,t_resid,r_oil):
         return 1/(1+k_nitroAdsorbDeact*w_nitro/r_oil)
      
-    #空速求取，工业数据中一般不会含有空速，此为一个近似计算公式
+    #空速求取，工业数据中一般不会含有空速，此为一个近似计算公式,单位： s-1
     #参数2, r_oil : 剂油比，t_resid : 催化剂停留时间
     def funcAirspeed(self，r_oil，t_resid):
         return 1/(r_oil*t_resid)
