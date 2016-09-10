@@ -44,58 +44,76 @@ print rk.implicitRK4(0,1,0.1,1,0.00000000000001)
 
 class RK(object):
 
-    def __init__(self, f):
-        self.func = f
+    def __init__(self, F):
+        self.funcs = F
 
-    def step(self, x, y, stepLength):
-        K1 = self.func(x, y)
-        K2 = self.func(x + stepLength / 2, y + stepLength * K1 / 2)
-        K3 = self.func(x + stepLength / 2, y + stepLength * K2 / 2)
-        K4 = self.func(x + stepLength, y + stepLength * K3)
+    def step(self, func, x, y, stepLength):
+        K1 = func(x, y)
+        K2 = func(x + stepLength / 2, y + stepLength * K1 / 2)
+        K3 = func(x + stepLength / 2, y + stepLength * K2 / 2)
+        K4 = func(x + stepLength, y + stepLength * K3)
         return y + stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6
     # 显式龙格库塔，即固定步长
 
-    def explicitRK4(self, x0, y0, stepLength, targetX):
+    def explicitRK4(self, x0, Y0, stepLength, targetX):
         x = x0
-        y = y0
-        while x + stepLength < targetX:
-            y = self.step(x, y, stepLength)
-            x = x + stepLength
-        stepLength = targetX - x
-        y = self.step(x, y, stepLength)
-        return y
+        Y = Y0
+        result_y = []
+        for i in range(len(self.funcs)):
+            y = Y[i]
+            func = self.funcs[i]
+            while x + stepLength < targetX:
+                y = self.step(func, x, y, stepLength)
+                x = x + stepLength
+            stepLength = targetX - x
+            y = self.step(func, x, y, stepLength)
+            result_y.append(y)
+        return result_y
     # 可变步长，隐式
 
-    def implicitRK4(self, x0, y0, stepLength, targetX, accuracy):
+    def implicitRK4(self, x0, Y0, stepLength, targetX, accuracy):
         x = x0
-        y = y0
-        while x + stepLength < targetX:
-            y2 = self.explicitRK4(x, y, stepLength / 2, x + stepLength)
-            y1 = self.step(x, y, stepLength)
-            i = 0
-            if abs(y1 - y2) > accuracy:
-                while abs(y1 - y2) > accuracy:
-                    i += 1
-                    para = 2**i
-                    y2 = self.explicitRK4(
-                        x, y, stepLength / (2 * para), x + stepLength / para)
-                    y1 = self.step(x, y, stepLength / para)
-                stepLength = stepLength / para
-                y = y1
-            elif abs(y1 - y2) < accuracy:
-                while abs(y1 - y2) < accuracy:
-                    i -= 1
-                    para = 2**i
-                    y2 = self.explicitRK4(
-                        x, y, stepLength / (2 * para), x + stepLength / para)
-                    y1 = self.step(x, y, stepLength / para)
+        Y = Y0
+        result_y = []
+        for i in range(len(self.funcs)):
 
-                stepLength = stepLength / (para * 2)
-                y = self.step(x, y, stepLength)
-            else:
-                y = self.step(x, y, stepLength)
-            x = x + stepLength
+            y = Y[i]
+            func = self.funcs[i]
+            while x + stepLength < targetX:
+                y2 = self.explicitRK4(
+                    x, [y], stepLength / 2, x + stepLength)[0]
+                y1 = self.step(func, x, y, stepLength)
+                i = 0
+                if abs(y1 - y2) > accuracy:
+                    while abs(y1 - y2) > accuracy:
+                        i += 1
+                        para = 2**i
+                        y2 = self.explicitRK4(
+                            x, [y], stepLength / (2 * para), x + stepLength / para)[0]
+                        y1 = self.step(func, x, y, stepLength / para)
+                    stepLength = stepLength / para
+                    y = y1
+                elif abs(y1 - y2) < accuracy:
+                    while abs(y1 - y2) < accuracy:
+                        i -= 1
+                        para = 2**i
+                        y2 = self.explicitRK4(
+                            x, [y], stepLength / (2 * para), x + stepLength / para)[0]
+                        y1 = self.step(func, x, y, stepLength / para)
 
-        stepLength = targetX - x
-        y = self.step(x, y, stepLength)
-        return y
+                    stepLength = stepLength / (para * 2)
+                    y = self.step(func, x, y, stepLength)
+                else:
+                    y = self.step(func, x, y, stepLength)
+                x = x + stepLength
+
+            stepLength = targetX - x
+            y = self.step(func, x, y, stepLength)
+            result_y.append(y)
+        return result_y
+
+
+def func(x, y):
+    return -y
+rk = RK([func])
+print rk.implicitRK4(0, [1], 0.1, 1, 0.0000000001)
