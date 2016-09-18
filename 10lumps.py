@@ -27,7 +27,7 @@ class LumpModel(object):
     集总模型
     '''
 
-    def __init__(self, t_resid, p, Y, const_r, t, w_aro, w_nitro, r_oil, Molmasses, n):
+    def __init__(self, t_resid, p, Y, const_r, t, w_aro, w_nitro, r_oil, Molmasses, n,K_model):
         '''
         初始化，参数9，为集总模型中9个已知模型参数，故在实例化的时候就传入
         分别为：
@@ -40,6 +40,7 @@ class LumpModel(object):
         w_nitro ； 原料中芳烃的质量百分含量
         r_oil : 剂油比
         n : 集总数
+        K_model : k矩阵模型，如存在反应途径，则相应位置为1
         '''
         self.t_resid = t_resid
         self.p = p
@@ -51,6 +52,7 @@ class LumpModel(object):
         self.Molmasses = Molmasses
         self.t = t
         self.n = n
+        self.K_model = K_model
 
     def __func_coke(self, const_cataDeact):
         '''焦炭影响因素，参数1  const_cataDeact : 催化剂·失活常数'''
@@ -98,13 +100,17 @@ class LumpModel(object):
         x0为1维数组，结构[K(按行展开平铺),k_aroAdsorbDeact,k_nitroAdsorbDeact,const_cataDeact]
         最后一行不足补齐0
         """
-        K = []
         n = self.n
-        # 前n行构成K
-        for i in xrange(0, len(x0), n):
-            K.append(x0[i:i + n])
-        K = mat(K[:-1])
-
+        K = asmatrix(zeros((n,n)))
+        for i in range(n):#将x0中的k按照K_model复原为K矩阵
+            sumCol = 0 #每一列k的和
+            for j in range(n):
+                if K_model.T[i,j] :
+                   k = x0.pop(0)
+                   K.T[i,j]=k
+                   sumCol -= k #反应动态平衡
+            K.T[i,i] = sumCol
+        print K
         # 最后一行前三个元素分别对应k_aroAdsorbDeact,k_nitroAdsorbDeact,const_cataDeact
         k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact = x0[-n:][:3]
         return self.func_dydx(K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact)
@@ -117,15 +123,16 @@ class Tools(object):
     def __init__(self):
         return
 
-    def opt_var_constructor(self, K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact):
+    def opt_var_constructor(self, K_init, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact):
         x0 = []
         bounds =1
         config.read('config.ini')
         k_bound = config.get('bounds', 'k')
         kn_bound = config.get('bounds', 'kn')
         ka_bound = config.get('bounds', 'ka')
-        for i in K:
-            x0.append(i)
+        for i in K_init.T.flat:
+            if i :
+                x0.append(i)
         self.x0 = x0 + [k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact]
         self.bounds =1
 
@@ -138,5 +145,28 @@ class Tools(object):
 #plt.plot(x, test(x))
 # plt.show()
 # print optimize.minimize(test,[-5.0,2],method='L-BFGS-B')
-config.read('config.ini')
-print config.get('bounds', 'k')
+x0=[]
+K_model =mat([[0,0,0,0],[1,0,0,0],[0,1,0,0],[1,1,1,0]])
+K_init = mat([[0,0,0,0],[2,0,0,0],[0,1,0,0],[3,2,4,0]])
+for i in K_init.T.flat:
+    if i :
+        x0.append(i)
+print x0
+n=4
+K = asmatrix(zeros((n,n)))
+# 前n行构成K
+for i in range(n):#将x0中的k按照K_model复原为K矩阵
+
+    sumCol = 0 #每一列k的和
+    for j in range(n):
+        if K_model.T[i,j] :
+            k = x0.pop(0)
+            K.T[i,j]=k
+            sumCol -= k #反应动态平衡
+    K.T[i,i] = sumCol
+print K
+
+
+
+
+
