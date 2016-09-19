@@ -2,50 +2,51 @@
 """
 龙格库塔法：
 参考资料：http://wenku.baidu.com/view/7f62170d4a7302768e993990.html
-	  https://zh.wikipedia.org/wiki/%E9%BE%99%E6%A0%BC%EF%BC%8D%E5%BA%93%E5%A1%94%E6%B3%95
+      https://zh.wikipedia.org/wiki/%E9%BE%99%E6%A0%BC%EF%BC%8D%E5%BA%93%E5%A1%94%E6%B3%95
 
 求微分方程解dy/dx=f(x,y)
 包含3个方法：
 1. step，龙格库塔法的每一步计算方法
 参数{
-	x0,
-	y0:初始x,y,
-	stepLength:初始步长 ,	
-	
-} 
+    x0,
+    y0:初始x,y,
+    stepLength:初始步长 ,
+
+}
 
 2. explicitRK4，显式龙格库塔，即固定步长：
 参数{
-	x0,
-	y0:初始x,y,
-	stepLength:初始步长 ,
-	targetX：目标的x
+    x0,
+    y0:初始x,y,
+    stepLength:初始步长 ,
+    targetX：目标的x
 }
 3. implicitRK4 可变步长，隐式
 参数{
-	x0,
-	y0:初始x,y,
-	stepLength:初始步长 ,
-	targetX：目标的x,
-	accuracy: 变步长的精确度
+    x0,
+    y0:初始x,y,
+    stepLength:初始步长 ,
+    targetX：目标的x,
+    accuracy: 变步长的精确度
 }
 
 
 example:
 from RK4 import RK
 def func(x,y):
-	return -y
+    return -y
 rk = RK(func)
 print rk.implicitRK4(0,1,0.1,1,0.00000000000001)
 
 
 """
+from numpy import *
 
 
 class RK(object):
 
-    def __init__(self, F):
-        self.funcs = F
+    def __init__(self, f):
+        self.func = f
 
     def step(self, func, x, y, stepLength):
         K1 = func(x, y)
@@ -57,17 +58,14 @@ class RK(object):
 
     def explicitRK4(self, x0, Y0, stepLength, targetX):
         x = x0
-        Y = Y0
-        result_y = []
-        for i in range(len(self.funcs)):
-            y = Y[i]
-            func = self.funcs[i]
-            while x + stepLength < targetX:
-                y = self.step(func, x, y, stepLength)
-                x = x + stepLength
-            stepLength = targetX - x
+        y = Y0
+        func = self.func
+        while x + stepLength < targetX:
             y = self.step(func, x, y, stepLength)
-            result_y.append(y)
+            x = x + stepLength
+        stepLength = targetX - x
+        y = self.step(func, x, y, stepLength)
+        result_y.append(y)
         return result_y
     # 可变步长，隐式
 
@@ -111,9 +109,3 @@ class RK(object):
             y = self.step(func, x, y, stepLength)
             result_y.append(y)
         return result_y
-
-
-def func(x, y):
-    return -y
-rk = RK([func])
-print rk.implicitRK4(0, [1], 0.1, 1, 0.0000000001)

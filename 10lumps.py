@@ -13,10 +13,11 @@
 
 import math
 import ConfigParser
+import json
 
 from numpy import *
 from scipy import optimize
-import pylab as plt
+from RK4 import RK
 
 
 config = ConfigParser.ConfigParser()
@@ -27,7 +28,7 @@ class LumpModel(object):
     集总模型
     '''
 
-    def __init__(self, t_resid, p, Y, const_r, t, w_aro, w_nitro, r_oil, Molmasses, n, K_model):
+    def __init__(self, t_resid, p, Y0, const_r, t, w_aro, w_nitro, r_oil, Molmasses, n, K_model):
         '''
         初始化，参数9，为集总模型中9个已知模型参数，故在实例化的时候就传入
         分别为：
@@ -45,7 +46,7 @@ class LumpModel(object):
         '''
         self.t_resid = t_resid
         self.p = p
-        self.Y = Y
+        self.Y0 = Y0
         self.const_r = const_r
         self.w_aro = w_aro
         self.w_nitro = w_nitro
@@ -64,7 +65,7 @@ class LumpModel(object):
         return 1 / (1 + k_aroAdsorbDeact * self.w_aro)
 
     def __func_nitro(self, k_nitroAdsorbDeact):
-        '''    
+        '''
         氮中毒影响因素计算函数，参数1  k_nitroAdsorbDeact：氮吸附失活系数，w_nitro ：氮百分含量，
         t_resid : 催化剂停留时间，r_oil : 剂油比
         '''
@@ -81,7 +82,7 @@ class LumpModel(object):
         """
         摩尔质量求取
         """
-        return self.Molmasses * (1 / self.Y.T)
+        return self.Molmasses * (1 / self.Y0.T)
 
     def func_dydx(self, K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact):
         """
@@ -90,10 +91,10 @@ class LumpModel(object):
         k_nitroAdsorbDeaoptimize.minimizect：氮吸附失活系数，const_cataDeact : 催化剂失活常数
         """
         self.Dydx = K * self.Y.T * self.__func_aro(k_aroAdsorbDeact) * self.__func_nitro(k_nitroAdsorbDeact) * self.__func_coke(
-            const_cataDeact) * self.__func_molmass() * self.p / (self.const_r * self.t * __func_airspeed())
+            const_cataDeact) * self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
         return self.Dydx
 
-    def dydx_for_optimize(self, x0):
+    def dydx_for_RK(self, x, Y):
         """
         func_dydx为优化（optimize）的封装
         由于scipy的优化方法局限，函数的参数只能有一个，无法直接对多个参数进行优化
@@ -103,10 +104,12 @@ class LumpModel(object):
         """
         n = self.n
         K = asmatrix(zeros((n, n)))
+        self.Y = Y
+        x0 = self.x0.tolist()
         for i in range(n):  # 将x0中的k按照K_model复原为K矩阵
             sumCol = 0  # 每一列k的和
             for j in range(n):
-                if K_model.T[i, j]:
+                if self.K_model.T[i, j]:
                     k = x0.pop(0)
                     K.T[i, j] = k
                     sumCol -= k  # 反应动态平衡
@@ -117,53 +120,92 @@ class LumpModel(object):
         return self.func_dydx(K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact)
 
     def func_object(self, x0):
-        return
+        self.x0 = x0
+        rk = RK(self.dydx_for_RK)
+        rk.explicitRK4(0, self.Y0, 0.1, 1)
 
 
 class Tools(object):
 
     def __init__(self):
-        return
+        self.bounds = []
 
-    def opt_var_constructor(self, K_init, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact):
+    def opt_var_constructor(self, K_init, ka_init, kn_init, const_cata_init):
         x0 = []
-        bounds = 1
+        bounds = []
         config.read('config.ini')
-        k_bound = config.get('bounds', 'k')
-        kn_bound = config.get('bounds', 'kn')
-        ka_bound = config.get('bounds', 'ka')
+        k_bound = json.loads(config.get('bounds', 'k'))
+        kn_bound = json.loads(config.get('bounds', 'kn'))
+        ka_bound = json.loads(config.get('bounds', 'ka'))
+        const_cata_bound = json.loads(config.get('bounds', 'const_cata'))
         for i in K_init.T.flat:
             if i:
                 x0.append(i)
-        self.x0 = x0 + [k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact]
-        self.bounds = 1
+                bounds.append(k_bound)
+        self.x0 = x0 + [ka_init, kn_init, const_cata_init]
+        self.bounds = bounds + [ka_bound, kn_bound, const_cata_bound]
 
 #    def opt_para_constructor(self , K , ):
 
 
-# def test(x):
-#    return x[0]**2 + 10*sin(x[1])
-#x = arange(-10, 10, 0.1)
-#plt.plot(x, test(x))
+# def test(x):const_cataDeact
+#    return x[0]**2 + 10*sin(x[1])Deact
+# x = arange(-10, 10, 0.1)
+# plt.plot(x, test(x))
 # plt.show()
 # print optimize.minimize(test,[-5.0,2],method='L-BFGS-B')
-x0 = []
-K_model = mat([[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [1, 1, 1, 0]])
-K_init = mat([[0, 0, 0, 0], [2, 0, 0, 0], [0, 1, 0, 0], [3, 2, 4, 0]])
-for i in K_init.T.flat:
-    if i:
-        x0.append(i)
-print x0
-n = 4
-K = asmatrix(zeros((n, n)))
-# 前n行构成K
-for i in range(n):  # 将x0中的k按照K_model复原为K矩阵
 
-    sumCol = 0  # 每一列k的和
-    for j in range(n):
-        if K_model.T[i, j]:
-            k = x0.pop(0)
-            K.T[i, j] = k
-            sumCol -= k  # 反应动态平衡
-    K.T[i, i] = sumCol
-print K
+# x0 = []
+# K_model = mat([[0, 0, 0, 0], [1, 0, 0, 0], [0, 1, 0, 0], [1, 1, 1, 0]])
+# K_init = mat([[0, 0, 0, 0], [2, 0, 0, 0], [0, 1, 0, 0], [3, 2, 4, 0]])
+# for i in K_init.T.fl__func_airspeedat:
+#     if i:
+#         x0.append(i)
+# print x0
+# n = 4
+# K = asmatrix(zeros((n, n)))
+# # 前n行构成K
+# for i in range(n):  # 将x0中的k按照K_model复原为K矩阵
+#     sumCol = 0  # 每一列k的和json转列表
+#     for j in range(n):
+#         if K_model.T[i, j]:
+#             k = x0.pop(0)
+#             K.T[i, j] = k
+#             sumCol -= k  # 反应动态平衡
+#     K.T[i, i] = sumCol
+# print K
+
+
+def init():
+
+    Molmasses = mat([0.8, 1.1, 1.8, 0.2, 0.11, 0.058, 0.012])
+    K_model = mat([
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0, 0],
+        [1, 1, 1, 1, 0, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0]
+    ])
+
+    K_init = mat([
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 1, 0, 0, 0, 0],
+        [1, 1, 1, 1, 0, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0],
+        [1, 1, 1, 1, 1, 0, 0]
+    ])
+    ka_init = 1
+    kn_init = 1
+    const_cata_init = 1
+    t = Tools()
+    Y_result = mat([1.02, 2, 1.9, 25.87, 46.97, 15.57, 6.67])
+    t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
+    # print 'x0=%r' % t.x0
+    lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=4.01, p=263, Y0=mat([66.43, 22.38, 11.19, 0, 0, 0, 0]), const_r=8.3145, w_aro=22.38, w_nitro=0.175, t=520, r_oil=6.47, n=7)
+    # optimize.minimize(lump.dydx_for_optimize, x0=t.x0, bounds=t.bounds, method='L-BFGS-B')
+    lump.func_object(array(t.x0))
+init()
