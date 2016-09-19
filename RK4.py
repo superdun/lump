@@ -50,10 +50,11 @@ class RK(object):
 
     def step(self, func, x, y, stepLength):
         K1 = func(x, y)
-        K2 = func(x + stepLength / 2, y + stepLength * K1 / 2)
-        K3 = func(x + stepLength / 2, y + stepLength * K2 / 2)
-        K4 = func(x + stepLength, y + stepLength * K3)
-        return y + stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6
+        K2 = func(x + stepLength / 2, y + (stepLength * K1 / 2).T)
+        K3 = func(x + stepLength / 2, y + (stepLength * K2 / 2).T)
+        K4 = func(x + stepLength, y + (stepLength * K3).T)
+
+        return y + (stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6).T
     # 显式龙格库塔，即固定步长
 
     def explicitRK4(self, x0, Y0, stepLength, targetX):
@@ -65,8 +66,8 @@ class RK(object):
             x = x + stepLength
         stepLength = targetX - x
         y = self.step(func, x, y, stepLength)
-        result_y.append(y)
-        return result_y
+        print y
+        return y
     # 可变步长，隐式
 
     def implicitRK4(self, x0, Y0, stepLength, targetX, accuracy):

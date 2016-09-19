@@ -82,7 +82,8 @@ class LumpModel(object):
         """
         摩尔质量求取
         """
-        return self.Molmasses * (1 / self.Y0.T)
+        # 返回常数，不是矩阵，numpy矩阵相乘后得到的数在矩阵里
+        return (1 / (asmatrix(self.Y0) * (1 / self.Molmasses.T)))[0, 0]
 
     def func_dydx(self, K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact):
         """
@@ -90,6 +91,13 @@ class LumpModel(object):
         K:矩阵，反应速率常数矩阵，k_aroAdsorbDeact：芳烃吸附失活系数
         k_nitroAdsorbDeaoptimize.minimizect：氮吸附失活系数，const_cataDeact : 催化剂失活常数
         """
+        # print self.__func_molmass() * self.p / (self.const_r * self.t *
+        # self.__func_airspeed())
+        print self.__func_nitro(k_nitroAdsorbDeact)
+        print self.__func_aro(k_aroAdsorbDeact)
+        print self.__func_coke(const_cataDeact)
+        print  self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
+        print '!!!!!!!!!!!'
         self.Dydx = K * self.Y.T * self.__func_aro(k_aroAdsorbDeact) * self.__func_nitro(k_nitroAdsorbDeact) * self.__func_coke(
             const_cataDeact) * self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
         return self.Dydx
@@ -114,7 +122,7 @@ class LumpModel(object):
                     K.T[i, j] = k
                     sumCol -= k  # 反应动态平衡
             K.T[i, i] = sumCol
-        print K
+        # print K
         # 最后一行前三个元素分别对应k_aroAdsorbDeact,k_nitroAdsorbDeact,const_cataDeact
         k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact = x0[-n:][:3]
         return self.func_dydx(K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact)
@@ -189,14 +197,23 @@ def init():
         [1, 1, 1, 1, 1, 0, 0]
     ])
 
+    # K_init = mat([
+    #     [0, 0, 0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0, 0, 0],
+    #     [0, 0, 0, 0, 0, 0, 0],
+    #     [1, 1, 1, 0, 0, 0, 0],
+    #     [1, 1, 1, 1, 0, 0, 0],
+    #     [1, 1, 1, 1, 1, 0, 0],
+    #     [1, 1, 1, 1, 1, 0, 0]
+    # ])
     K_init = mat([
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 0, 0, 0],
-        [1, 1, 1, 1, 0, 0, 0],
-        [1, 1, 1, 1, 1, 0, 0],
-        [1, 1, 1, 1, 1, 0, 0]
+        [0,     0,     0,       0,       0,      0, 0],
+        [0,     0,     0,       0,       0,      0, 0],
+        [0,     0,     0,       0,       0,      0, 0],
+        [1.59,  1.419, 0.47738, 0,       0,      0, 0],
+        [2.24,  1.410, 1.40121, 0.64871, 0,      0, 0],
+        [0.4877, 0.4584, 1.31941, 0.03473, 0.40114, 0, 0],
+        [0.092, 0.1069, 0.63123, 0.3566,  0.04694, 0, 0]
     ])
     ka_init = 1
     kn_init = 1
@@ -205,7 +222,8 @@ def init():
     Y_result = mat([1.02, 2, 1.9, 25.87, 46.97, 15.57, 6.67])
     t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
     # print 'x0=%r' % t.x0
-    lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=4.01, p=263, Y0=mat([66.43, 22.38, 11.19, 0, 0, 0, 0]), const_r=8.3145, w_aro=22.38, w_nitro=0.175, t=520, r_oil=6.47, n=7)
+    lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=4.01, p=263, Y0=mat(
+        [0.6643, 0.2238, 0.1119, 0, 0, 0, 0]), const_r=8.3145, w_aro=22.38, w_nitro=0.175, t=520, r_oil=6.47, n=7)
     # optimize.minimize(lump.dydx_for_optimize, x0=t.x0, bounds=t.bounds, method='L-BFGS-B')
     lump.func_object(array(t.x0))
 init()
