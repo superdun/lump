@@ -58,7 +58,7 @@ class LumpModel(object):
 
     def __func_coke(self, const_cataDeact):
         '''焦炭影响因素，参数1  const_cataDeact : 催化剂·失活常数'''
-        return math.e**(-1 * const_cataDeact * self.t_resid)
+        return math.e**(-1 * const_cataDeact * self.t_resid / 3600)
 
     def __func_aro(self, k_aroAdsorbDeact):
         '''芳烃影响因素，参数1  k_aroAdsorbDeact ：芳烃吸附失活系数，w_aro :  芳烃百分含量'''
@@ -93,11 +93,11 @@ class LumpModel(object):
         """
         # print self.__func_molmass() * self.p / (self.const_r * self.t *
         # self.__func_airspeed())
-        print self.__func_nitro(k_nitroAdsorbDeact)
-        print self.__func_aro(k_aroAdsorbDeact)
-        print self.__func_coke(const_cataDeact)
-        print  self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
-        print '!!!!!!!!!!!'
+        # print self.__func_nitro(k_nitroAdsorbDeact)
+        # print self.__func_aro(k_aroAdsorbDeact)
+        # print self.__func_coke(const_cataDeact)
+        # print self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
+        # print '!!!!!!!!!!!'
         self.Dydx = K * self.Y.T * self.__func_aro(k_aroAdsorbDeact) * self.__func_nitro(k_nitroAdsorbDeact) * self.__func_coke(
             const_cataDeact) * self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
         return self.Dydx
@@ -130,7 +130,10 @@ class LumpModel(object):
     def func_object(self, x0):
         self.x0 = x0
         rk = RK(self.dydx_for_RK)
-        rk.explicitRK4(0, self.Y0, 0.1, 1)
+        Y_cal = rk.explicitRK4(0, self.Y0, 0.1, 1)
+        Y_result = Y_result = mat([0.0102, 0.02, 0.019, 0.2587, 0.4697, 0.1557, 0.0667])
+        print ((Y_cal - Y_result) * (Y_cal - Y_result).T)[0, 0]
+        return ((Y_cal - Y_result) * (Y_cal - Y_result).T)[0, 0]
 
 
 class Tools(object):
@@ -206,24 +209,35 @@ def init():
     #     [1, 1, 1, 1, 1, 0, 0],
     #     [1, 1, 1, 1, 1, 0, 0]
     # ])
-    K_init = mat([
-        [0,     0,     0,       0,       0,      0, 0],
-        [0,     0,     0,       0,       0,      0, 0],
-        [0,     0,     0,       0,       0,      0, 0],
-        [1.59,  1.419, 0.47738, 0,       0,      0, 0],
-        [2.24,  1.410, 1.40121, 0.64871, 0,      0, 0],
-        [0.4877, 0.4584, 1.31941, 0.03473, 0.40114, 0, 0],
-        [0.092, 0.1069, 0.63123, 0.3566,  0.04694, 0, 0]
-    ])
-    ka_init = 1
-    kn_init = 1
-    const_cata_init = 1
+    # K_init = mat([
+    #     [0,     0,     0,       0,       0,      0, 0],
+    #     [0,     0,     0,       0,       0,      0, 0],
+    #     [0,     0,     0,       0,       0,      0, 0],
+    #     [1.59,  1.419, 0.47738, 0,       0,      0, 0],
+    #     [2.24,  1.410, 1.40121, 0.64871, 0,      0, 0],
+    #     [0.4877, 0.4584, 1.31941, 0.03473, 0.40114, 0, 0],
+    #     [0.092, 0.1069, 0.63123, 0.3566,  0.04694, 0, 0]
+    # ])
+
+    K_init = mat([2.07745367e+00,   1.77375607e+00,   2.44926962e-01,
+                  4.44831362e-02,   8.23186706e-01,   8.86057071e-01,
+                  1.04978809e-01,   5.95094499e-01,   6.33720879e-01,
+                  6.60040783e-01,   3.65101313e-01,   1.10248296e-01,
+                  6.44659134e-01,   4.26872169e-02,   1.29619541e-02,
+                  2.39223407e-01,   1.09750865e-04,   1.94931725e+00,
+                  1.95221608e+00,   4.08913128e+00])
+
+    ka_init = 0.44
+    kn_init = 1.95
+    const_cata_init = 4.08
     t = Tools()
-    Y_result = mat([1.02, 2, 1.9, 25.87, 46.97, 15.57, 6.67])
+    Y_result = mat([0.0102, 0.02, 0.019, 0.2587, 0.4697, 0.1557, 0.0667])
     t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
     # print 'x0=%r' % t.x0
     lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=4.01, p=263, Y0=mat(
-        [0.6643, 0.2238, 0.1119, 0, 0, 0, 0]), const_r=8.3145, w_aro=22.38, w_nitro=0.175, t=520, r_oil=6.47, n=7)
-    # optimize.minimize(lump.dydx_for_optimize, x0=t.x0, bounds=t.bounds, method='L-BFGS-B')
+        [0.6643, 0.2238, 0.1119, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.2238, w_nitro=0.00175, t=520, r_oil=6.47, n=7)
+    # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=4.19, p=263, Y0=mat(
+    #     [0.6366, 0.2368, 0.1266, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.2368, w_nitro=0.001703, t=520, r_oil=6.29, n=7)
+    # print optimize.minimize(lump.func_object, x0=t.x0, bounds=t.bounds, method='L-BFGS-B', tol=1e-6)
     lump.func_object(array(t.x0))
 init()
