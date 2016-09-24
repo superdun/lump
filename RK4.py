@@ -66,7 +66,7 @@ class RK(object):
             x = x + stepLength
         stepLength = targetX - x
         y = self.step(func, x, y, stepLength)
-        print y
+        # print y
         return y
     # 可变步长，隐式
 
