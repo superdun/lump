@@ -19,6 +19,9 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <widget class="QGroupBox" name="groupBox">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
       <x>890</x>
@@ -70,31 +73,17 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>131</width>
-             <height>194</height>
+             <width>148</width>
+             <height>103</height>
             </rect>
            </property>
            <layout class="QGridLayout" name="gridLayout_3">
             <item row="0" column="0">
-             <widget class="QLineEdit" name="lineEdit_14"/>
-            </item>
-            <item row="1" column="0">
-             <widget class="QLineEdit" name="lineEdit_19"/>
-            </item>
-            <item row="2" column="0">
-             <widget class="QLineEdit" name="lineEdit_16"/>
-            </item>
-            <item row="3" column="0">
-             <widget class="QLineEdit" name="lineEdit_17"/>
-            </item>
-            <item row="4" column="0">
-             <widget class="QLineEdit" name="lineEdit_18"/>
-            </item>
-            <item row="5" column="0">
-             <widget class="QLineEdit" name="lineEdit_15"/>
-            </item>
-            <item row="6" column="0">
-             <widget class="QLineEdit" name="lineEdit_13"/>
+             <widget class="QLineEdit" name="lineEdit_14">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+             </widget>
             </item>
            </layout>
           </widget>
@@ -247,9 +236,12 @@
     </layout>
    </widget>
    <widget class="QTabWidget" name="tabWidget">
+    <property name="enabled">
+     <bool>false</bool>
+    </property>
     <property name="geometry">
      <rect>
-      <x>620</x>
+      <x>610</x>
       <y>90</y>
       <width>241</width>
       <height>501</height>
@@ -265,6 +257,43 @@
       <string>Tab 2</string>
      </attribute>
     </widget>
+   </widget>
+   <widget class="QGroupBox" name="groupBox_2">
+    <property name="geometry">
+     <rect>
+      <x>890</x>
+      <y>20</y>
+      <width>331</width>
+      <height>76</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <family>Trebuchet MS</family>
+      <pointsize>14</pointsize>
+     </font>
+    </property>
+    <property name="title">
+     <string>集总数</string>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="0" column="1">
+      <widget class="QPushButton" name="confirm_n">
+       <property name="text">
+        <string>确认</string>
+       </property>
+       <property name="autoDefault">
+        <bool>true</bool>
+       </property>
+       <property name="default">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QSpinBox" name="n"/>
+     </item>
+    </layout>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
