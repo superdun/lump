@@ -5,26 +5,73 @@
     <title>Title of the document</title>
     <script src="static/js/jquery-3.1.1.min.js"></script>
     <script src="static/js/jquery-ui.js"></script>
-     <script src="static/js/bootstrap.min.js"></script>
-    <link href="static/css/jquery-ui.css" rel="stylesheet">
+    <script src="static/js/bootstrap.min.js"></script>
+    <script src="static/js/user.js"></script>
     <link href="static/css/bootstrap.min.css" rel="stylesheet">
 
 </head>
 
 <body>
 <div class="container-fluid">
-  <div class="row">
-      <div class="col-md-6">.col-md-6</div>
-      <div class="col-md-3">.col-md-3</div>
-      <div class="col-md-3">
-          <div id="n_containner">
-              <label for="n">集总数：</label>
-              <span class="ui-spinner ui-corner-all ui-widget ui-widget-content">
-                  <input class="ui-spinner-input" id="n" role="spinbutton">
-              </span>
-          </div>
-      </div>
-  </div>
+    <div class="row">
+        <div class="col-md-6">.col-md-6</div>
+        <div class="col-md-3">.col-md-3</div>
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">集总数：</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="input-group">
+
+                        <input type="number" class="form-control" id="n" value="3" max="20" min="3">
+
+                    </div><!-- /input-group -->
+                </div>
+
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">初始组成：</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="input-group" >
+                    <table class="table table-hover table-condensed" id="Y0_input">
+                        <tr>
+                            <th>
+                               #
+                            </th>
+                            <th>
+                                组分名
+                            </th>
+                            <th>
+                                组分含量
+                            </th>
+                        </tr>
+                    </table>
+
+                    </div><!-- /input-group -->
+                </div>
+
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">反应条件：</h3>
+                </div>
+                <div class="panel-body">
+                    <div class="input-group">
+
+                        <input type="number" class="form-control">
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button">确认</button>
+                        </span>
+                    </div><!-- /input-group -->
+                </div>
+
+            </div>
+
+        </div>
+    </div>
 </div>
 </body>
 
