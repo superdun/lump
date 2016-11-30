@@ -16,7 +16,19 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-md-6">.col-md-6</div>
-        <div class="col-md-3">.col-md-3</div>
+        <div class="col-md-3">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">网络构建：</h3>
+                </div>
+                <div class="panel-body" id="canvasContainer">
+                    <div class="input-group">
+                        <canvas id="canvas"> 请升级您的浏览器</canvas>
+                    </div><!-- /input-group -->
+                </div>
+
+            </div>
+        </div>
         <div class="col-md-3">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -31,104 +43,121 @@
                 </div>
 
             </div>
+
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title">初始组成：</h3>
+                    <h3 class="panel-title">条件输入面板：</h3>
                 </div>
                 <div class="panel-body">
 
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">初始组成：</h3>
+                        </div>
+                        <div class="panel-body">
 
-                    <ul id="myTab" class="nav nav-tabs">
-                        <li class="active">
-                            <a href="#Y0_tag" data-toggle="tab">
-                                原料油组成
-                            </a>
-                        </li>
-                        <li><a href="#nitro_tag" data-toggle="tab">碱氮组成</a></li>
-                        <li><a href="#aro_tag" data-toggle="tab">芳烃组成</a></li>
-                    </ul>
-                    <div id="myTabContent" class="tab-content">
-                        <div class="tab-pane fade in active" id="Y0_tag">
 
-                            <table class="table table-hover table-condensed" id="Y0_input">
-                                <tr>
-                                    <th class="col-sm-2">
-                                        #
-                                    </th>
-                                    <th class="col-sm-5">
-                                        组分名
-                                    </th>
-                                    <th class="col-sm-5">
-                                        组分含量
-                                    </th>
-                                </tr>
-                            </table>
+                            <ul id="myTab" class="nav nav-tabs">
+                                <li class="active">
+                                    <a href="#Y0_tag" data-toggle="tab">
+                                        原料油
+                                    </a>
+                                </li>
+                                <li><a href="#nitro_tag" data-toggle="tab">碱氮</a></li>
+                                <li><a href="#aro_tag" data-toggle="tab">芳烃</a></li>
+                            </ul>
+                            <div id="myTabContent" class="tab-content">
+                                <div class="tab-pane fade in active" id="Y0_tag">
+
+                                    <table class="table table-hover table-condensed" id="Y0_input">
+                                        <tr>
+                                            <th class="col-sm-2">
+                                                #
+                                            </th>
+                                            <th class="col-sm-5">
+                                                组分名
+                                            </th>
+                                            <th class="col-sm-5">
+                                                组分含量
+                                            </th>
+                                        </tr>
+                                    </table>
+
+                                </div>
+                                <div class="tab-pane fade" id="nitro_tag">
+                                    <input type="number" class="form-control" id="nitro" value="0.001" step="0.001"
+                                           max="1"
+                                           min="0">
+                                </div>
+                                <div class="tab-pane fade" id="aro_tag">
+                                    <input type="number" class="form-control" id="aro" value="0.001" step="0.001"
+                                           max="1"
+                                           min="0">
+                                </div>
+                            </div>
 
                         </div>
-                        <div class="tab-pane fade" id="nitro_tag">
-                            <input type="number" class="form-control" id="nitro" value="0.001" step="0.001" max="1"
-                                   min="0">
-                        </div>
-                        <div class="tab-pane fade" id="aro_tag">
-                            <input type="number" class="form-control" id="aro" value="0.001" step="0.001" max="1"
-                                   min="0">
-                        </div>
+
                     </div>
-
-                </div>
-
-            </div>
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">反应条件：</h3>
-                </div>
-                <div class="panel-body">
-                    <div class="input-group">
+                    <div class="panel panel-default">
+                        <div class="panel-heading">
+                            <h3 class="panel-title">反应条件：</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="input-group">
                         <span class="input-group-addon">
                             停留时间
                         </span>
-                        <input type="number" class="form-control">
-                        <span class="input-group-addon">
+                                <input type="number" class="form-control">
+                                <span class="input-group-addon">
                             s
                         </span>
-                    </div><!-- /input-group -->
-                    <div class="input-group">
+                            </div><!-- /input-group -->
+                            <div class="input-group">
                         <span class="input-group-addon">
                             反应压力
                         </span>
-                        <input type="number" class="form-control">
-                        <span class="input-group-addon">
+                                <input type="number" class="form-control">
+                                <span class="input-group-addon">
                             kPa
                         </span>
-                    </div><!-- /input-group -->
-                    <div class="input-group">
+                            </div><!-- /input-group -->
+                            <div class="input-group">
                         <span class="input-group-addon">
                             反应温度
                         </span>
-                        <input type="number" class="form-control">
-                        <span class="input-group-addon">
+                                <input type="number" class="form-control">
+                                <span class="input-group-addon">
                             K
                         </span>
-                    </div><!-- /input-group -->
-                    <div class="input-group">
+                            </div><!-- /input-group -->
+                            <div class="input-group">
                         <span class="input-group-addon">
                             R
                         </span>
-                        <input type="number" class="form-control" value="8.3145" disabled>
-                        <span class="input-group-addon">
+                                <input type="number" class="form-control" value="8.3145" disabled>
+                                <span class="input-group-addon">
                             J·Mol<sup>-1</sup>·K<sup>-1</sup>
                         </span>
-                    </div><!-- /input-group -->
-                    <div class="input-group">
+                            </div><!-- /input-group -->
+                            <div class="input-group">
                         <span class="input-group-addon">
                             剂油比
                         </span>
-                        <input type="number" class="form-control">
+                                <input type="number" min="0" class="form-control">
 
-                    </div><!-- /input-group -->
+                            </div><!-- /input-group -->
+                            <button type="button" id="myButton" data-loading-text="Loading..." class="btn btn-primary"
+                                    autocomplete="off">
+                                输入此组数据
+                            </button>
+                        </div>
+
+                    </div>
                 </div>
 
             </div>
+
 
         </div>
     </div>
