@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Title of the document</title>
+    <title>集总模型软件</title>
     <script src="static/js/jquery-3.1.1.min.js"></script>
     <script src="static/js/jquery-ui.js"></script>
     <script src="static/js/bootstrap.min.js"></script>
@@ -27,6 +27,27 @@
                     </div><!-- /input-group -->
                 </div>
 
+            </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">已输入条件：</h3>
+                </div>
+
+                <textarea id="factorShow" disabled></textarea>
+                <textarea id="preFactorShow" disabled></textarea>
+
+            </div>
+            <div>
+                <button type="button" id="getK" data-loading-text="Loading..."
+                        class="btn btn-primary"
+                        autocomplete="off">
+                    只计算K
+                </button>
+                <button type="button" id="getResult" data-loading-text="Loading..."
+                        class="btn btn-primary"
+                        autocomplete="off">
+                    预测
+                </button>
             </div>
         </div>
         <div class="col-md-3">
@@ -74,11 +95,14 @@
                                             <th class="col-sm-2">
                                                 #
                                             </th>
-                                            <th class="col-sm-5">
+                                            <th class="col-sm-2">
                                                 组分名
                                             </th>
-                                            <th class="col-sm-5">
-                                                组分含量
+                                            <th class="col-sm-4">
+                                                组分初始含量
+                                            </th>
+                                            <th class="col-sm-4">
+                                                组分最终含量
                                             </th>
                                         </tr>
                                     </table>
@@ -108,7 +132,7 @@
                         <span class="input-group-addon">
                             停留时间
                         </span>
-                                <input type="number" class="form-control">
+                                <input type="number" class="form-control" id="t_redis">
                                 <span class="input-group-addon">
                             s
                         </span>
@@ -117,7 +141,7 @@
                         <span class="input-group-addon">
                             反应压力
                         </span>
-                                <input type="number" class="form-control">
+                                <input type="number" class="form-control" id="p">
                                 <span class="input-group-addon">
                             kPa
                         </span>
@@ -126,7 +150,7 @@
                         <span class="input-group-addon">
                             反应温度
                         </span>
-                                <input type="number" class="form-control">
+                                <input type="number" class="form-control" id="T">
                                 <span class="input-group-addon">
                             K
                         </span>
@@ -135,7 +159,7 @@
                         <span class="input-group-addon">
                             R
                         </span>
-                                <input type="number" class="form-control" value="8.3145" disabled>
+                                <input type="number" class="form-control" value="8.3145" disabled id="R">
                                 <span class="input-group-addon">
                             J·Mol<sup>-1</sup>·K<sup>-1</sup>
                         </span>
@@ -144,12 +168,18 @@
                         <span class="input-group-addon">
                             剂油比
                         </span>
-                                <input type="number" min="0" class="form-control">
+                                <input type="number" min="0" class="form-control" id="OR">
 
                             </div><!-- /input-group -->
-                            <button type="button" id="myButton" data-loading-text="Loading..." class="btn btn-primary"
+                            <button type="button" id="inputFactors" data-loading-text="Loading..."
+                                    class="btn btn-primary"
                                     autocomplete="off">
-                                输入此组数据
+                                输入此组数据为条件
+                            </button>
+                            <button type="button" id="inputPreFactors" data-loading-text="Loading..."
+                                    class="btn btn-primary"
+                                    autocomplete="off">
+                                输入此组数据作为预测
                             </button>
                         </div>
 
