@@ -43,7 +43,7 @@ var app ={
                 dataType:'json'
             })
         })
-        var n = $('#n').val()
+        var n = $('#n').val
         $('#n').change(function(){
             app.factorStorage.clear();
             $('#getK').attr('disabled',true)
