@@ -3,26 +3,40 @@ window.onload = function(){
 }
 var app ={
     init:function(){
-
+        $('#getK').attr('disabled',true)
+        $('#getResult').attr('disabled',true)
         app.factorStorage = localStorage;
         if(app.factorStorage.n>=3){
             $('#n').val(app.factorStorage.n*1)
         }
         if(app.factorStorage.data){
+            $('#getK').attr('disabled',false)
             app.makeFactorResultTableWhenInit(app.factorStorage.data)
         }
         if(app.factorStorage.preData){
+            $('#getResult').attr('disabled',false)
             app.makePreFactorResultTable(app.factorStorage.preData)
         }
 
         if(app.factorStorage.factorsCount){
             data.count = app.factorStorage.factorsCount
         }
-
-
+        $('#clearFactors').click(function(){
+            app.rmFactors()
+        })
+        $('#clearPreFactors').click(function(){
+            app.rmPreFactors()
+        })
         $('#inputFactors').click(function(){data.getFactors()})
         $('#inputPreFactors').click(function(){data.getPreFactors()})
-
+        $('#getK').click(function(){
+            $.ajax({
+                type:'POST',
+                url:'/getK',
+                data:app.factorStorage,
+                dataType:'json'
+            })
+        })
         var n = $('#n').val()
         $('#n').change(function(){
             app.factorStorage.clear();
@@ -111,6 +125,16 @@ var app ={
 
            }
        }
+    },
+    rmFactors:function(){
+        app.factorStorage.removeItem('data')
+        $('#factorShow').text('')
+        $('#getK').attr('disabled',true)
+    },
+    rmPreFactors:function(){
+        app.factorStorage.removeItem('preData')
+        $('#preFactorShow').text('')
+        $('#getResult').attr('disabled',true)
     }
 
 }
@@ -205,6 +229,8 @@ var data = {
         data.T=0
         data.OR=0
         data.p=0
+        data.nitro = 0
+        data.aro = 0
         for (var i=0;i<data.n;i++){
             var row = []
             for (var j=0;j<data.n;j++){
@@ -227,6 +253,8 @@ var data = {
         data.t_redis = $('#t_redis').val()
         data.T = $('#T').val()
         data.p = $('#p').val()
+        data.nitro = $('#nitro').val()
+        data.aro =$('#aro').val()
         data.OR = $('#OR').val()
         data.R = $('#R').val()
         canvas.writeText()
@@ -239,7 +267,9 @@ var data = {
         p:data.p,
         OR:data.OR,
         R:data.R,
-        Y_values:data.Y_values
+        Y_values:data.Y_values,
+        nitro:data.nitro,
+        aro:data.aro
         }
         $('.Y0_names').attr('disabled',true)
         app.makeFactorResultTable(JSON.stringify(tempData))
@@ -251,6 +281,8 @@ var data = {
         }
         app.factorStorage.Y0_names =data.Y0_names
         app.factorStorage.K_model = data.K_model
+        $('#getK').attr('disabled',false)
+
     },
     getPreFactors:function(){
         data.init()
@@ -265,6 +297,8 @@ var data = {
         data.p = $('#p').val()
         data.OR = $('#OR').val()
         data.R = $('#R').val()
+        data.nitro = $('#nitro').val()
+        data.aro =$('#aro').val()
         canvas.writeText()
         data.count++
         var tempData = {
@@ -275,6 +309,8 @@ var data = {
         p:data.p,
         OR:data.OR,
         R:data.R,
+        nitro:data.nitro,
+        aro:data.aro
         }
         $('.Y0_names').attr('disabled',true)
         app.makePreFactorResultTable(JSON.stringify(tempData))
@@ -282,5 +318,6 @@ var data = {
         app.factorStorage.factorsCount = data.count
         app.factorStorage.Y0_names =data.Y0_names
         app.factorStorage.K_model = data.K_model
+        $('#getResult').attr('disabled',false)
     }
 }

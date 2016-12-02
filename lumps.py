@@ -291,4 +291,4 @@ def run():
         print 'result='
         print lump.result_for_forecast(X0_result)
         t.x0 = X0_result
-run()
+# run()

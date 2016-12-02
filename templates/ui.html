@@ -34,14 +34,19 @@
                 </div>
 
                 <textarea id="factorShow" disabled></textarea>
+                <button type="button" id="clearFactors" data-loading-text="Loading..."
+                        class="btn btn-primary"
+                        autocomplete="off">清除条件</button>
                 <textarea id="preFactorShow" disabled></textarea>
-
+             <button type="button" id="clearPreFactors" data-loading-text="Loading..."
+                        class="btn btn-primary"
+                        autocomplete="off">清除待预测条件</button>
             </div>
             <div>
                 <button type="button" id="getK" data-loading-text="Loading..."
                         class="btn btn-primary"
                         autocomplete="off">
-                    只计算K
+                    计算K
                 </button>
                 <button type="button" id="getResult" data-loading-text="Loading..."
                         class="btn btn-primary"
@@ -109,12 +114,12 @@
 
                                 </div>
                                 <div class="tab-pane fade" id="nitro_tag">
-                                    <input type="number" class="form-control" id="nitro" value="0.001" step="0.001"
+                                    <input type="number" class="form-control" id="nitro" value="0" step="0.001"
                                            max="1"
                                            min="0">
                                 </div>
                                 <div class="tab-pane fade" id="aro_tag">
-                                    <input type="number" class="form-control" id="aro" value="0.001" step="0.001"
+                                    <input type="number" class="form-control" id="aro" value="0" step="0.001"
                                            max="1"
                                            min="0">
                                 </div>
