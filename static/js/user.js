@@ -5,6 +5,8 @@ var app ={
     init:function(){
         $('#getK').attr('disabled',true)
         $('#getResult').attr('disabled',true)
+        $('.Y0_names').attr('disabled',false)
+        $('.mol_mass').attr('disabled',false)
         app.factorStorage = localStorage;
         if(app.factorStorage.n>=3){
             $('#n').val(app.factorStorage.n*1)
@@ -27,12 +29,7 @@ var app ={
         $('#clearPreFactors').click(function(){
             app.rmPreFactors()
         })
-        if(app.factorStorage.mol_mass){
-            $('.mol_mass').attr('disabled',true)
-        }
-        if(app.factorStorage.Y0_names){
-            $('.Y0_names').attr('disabled',true)
-        }
+
         $('#inputFactors').click(function(){data.getFactors()})
         $('#inputPreFactors').click(function(){data.getPreFactors()})
         $('#getK').click(function(){
@@ -43,7 +40,7 @@ var app ={
                 dataType:'json'
             })
         })
-        var n = $('#n').val
+        var n = $('#n').val()
         $('#n').change(function(){
             app.factorStorage.clear();
             $('#getK').attr('disabled',true)
@@ -63,8 +60,13 @@ var app ={
             app.factorStorage.n = data.n=n
             canvas.init()
         })
+
         app.factorStorage.n = data.n=n
         app.makeY0Table(0,n)
+        if(app.factorStorage.data){
+             $('.Y0_names').attr('disabled',true)
+            $('.mol_mass').attr('disabled',true)
+        }
         data.init()
         canvas.init()
 
@@ -89,7 +91,7 @@ var app ={
     },
     makeY0Table:function(base,n){
         for(var i=0;i<n;i++){
-            $('#Y0_input').append("<tr class='Y0_trs'><td>"+(i+base+1)+"</td><td><input  type=\"text\" class ='Y0_names form-control' value='a'></td><td><input type=\"number\"  value=\"0\" width='2000px' step=\"0.1\" max=\"1\" min=\"0\" class ='form-control   YO_values'></td><td><input type=\"number\"  value=\"0\"  step=\"0.1\" max=\"1\" min=\"0\" class ='form-control   Y_values'></td><td><input type=\"number\"  value=\"0\"  step=\"0.1\" max=\"1\" min=\"0\" class ='form-control   mol_mass'></td></tr>")
+            $('#Y0_input').append("<tr class='Y0_trs'><td>"+(i+base+1)+"</td><td><input  type=\"text\" class ='Y0_names form-control'></td><td><input type=\"number\"  value=\"0\"  step=\"0.1\"  min=\"0\" class ='form-control   mol_mass'></td> <td><input type=\"number\"  value=\"0\" width='2000px' step=\"0.1\" max=\"1\" min=\"0\" class ='form-control   YO_values'></td><td><input type=\"number\"  value=\"0\"  step=\"0.1\" max=\"1\" min=\"0\" class ='form-control   Y_values'></td></tr>")
         }
     },
     makeFactorResultTable:function(d){
@@ -138,6 +140,8 @@ var app ={
         app.factorStorage.removeItem('data')
         $('#factorShow').text('')
         $('#getK').attr('disabled',true)
+        $('.Y0_names').attr('disabled',false)
+        $('.mol_mass').attr('disabled',false)
     },
     rmPreFactors:function(){
         app.factorStorage.removeItem('preData')
@@ -233,7 +237,7 @@ var data = {
         data.Y0_values=[]
         data.Y0_names=[]
         data.Y_values=[]
-        data.t_redis=0
+        data.t_resid=0
         data.T=0
         data.OR=0
         data.p=0
@@ -262,7 +266,7 @@ var data = {
         $.each($('.mol_mass'),function(k,v){
             data.mol_mass.push(v.value)
         })
-        data.t_redis = $('#t_redis').val()
+        data.t_resid = $('#t_resid').val()
         data.T = $('#T').val()
         data.p = $('#p').val()
         data.nitro = $('#nitro').val()
@@ -274,7 +278,7 @@ var data = {
         var tempData = {
         Y0_names:data.Y0_names,
         Y0_values:data.Y0_values,
-        t_redis:data.t_redis,
+        t_resid:data.t_resid,
         T:data.T,
         p:data.p,
         OR:data.OR,
@@ -295,6 +299,7 @@ var data = {
         }
         app.factorStorage.Y0_names =data.Y0_names
         app.factorStorage.K_model = data.K_model
+        app.factorStorage.mol_mass = data.mol_mass
         $('#getK').attr('disabled',false)
 
     },
@@ -309,7 +314,7 @@ var data = {
         $.each($('.mol_mass'),function(k,v){
             data.mol_mass.push(v.value)
         })
-        data.t_redis = $('#t_redis').val()
+        data.t_resid = $('#t_resid').val()
         data.T = $('#T').val()
         data.p = $('#p').val()
         data.OR = $('#OR').val()
@@ -321,14 +326,14 @@ var data = {
         var tempData = {
         Y0_names:data.Y0_names,
         Y0_values:data.Y0_values,
-        t_redis:data.t_redis,
+        t_resid:data.t_resid,
         T:data.T,
         p:data.p,
         OR:data.OR,
         R:data.R,
         nitro:data.nitro,
         aro:data.aro,
-        mol_mass:tempData.mol_mass
+        mol_mass:data.mol_mass
         }
         $('.Y0_names').attr('disabled',true)
         app.makePreFactorResultTable(JSON.stringify(tempData))
@@ -336,6 +341,8 @@ var data = {
         app.factorStorage.factorsCount = data.count
         app.factorStorage.Y0_names =data.Y0_names
         app.factorStorage.K_model = data.K_model
+        app.factorStorage.mol_mass = data.mol_mass
+
         $('#getResult').attr('disabled',false)
     }
 }
