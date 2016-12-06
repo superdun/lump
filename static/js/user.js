@@ -40,6 +40,14 @@ var app ={
                 dataType:'json'
             })
         })
+        $('#getResult').click(function(){
+            $.ajax({
+                type:'POST',
+                url:'/getResult',
+                data:app.factorStorage,
+                dataType:'json'
+            })
+        })
         var n = $('#n').val()
         $('#n').change(function(){
             app.factorStorage.clear();
