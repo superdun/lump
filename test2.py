@@ -156,11 +156,30 @@ class Tools(object):
         const_cata_bound = json.loads(config.get('bounds', 'const_cata'))
         for i in K_init.T.flat:
             if i:
+
                 x0.append(i)
                 bounds.append(k_bound)
         self.x0 = x0 + [ka_init, kn_init, const_cata_init]
         self.bounds = bounds + [ka_bound, kn_bound, const_cata_bound]
-
+    def make_result(self,K_model,result,n):
+        K=result[:-3].tolist()
+        args = result[-3:]
+        K_raw_result=[]
+        for i in K_model.T.flat:
+            if i:
+                K_raw_result.append(K.pop(0))
+            else:
+                K_raw_result.append(0)
+        K_result=reshape(K_raw_result,(n,n)).T.T.T
+        ka_result,kn_result,cata_result=args
+        print 'K='
+        print K_result
+        print 'ka='
+        print ka_result
+        print 'kn='
+        print kn_result
+        print 'cata='
+        print cata_result
 
 def obj(x0):
     sum = 0
@@ -176,12 +195,29 @@ def obj(x0):
     ])
 
     factors = [
-        {'t_resid': 3.09, 'p': 175, 'Y0': mat(
+        {'t_resid': 3, 'p': 175, 'Y0': mat(
             [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 8.59},
-        {'t_resid': 3.41, 'p': 175, 'Y0': mat(
+        {'t_resid': 3, 'p': 175, 'Y0': mat(
             [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 9.72}]
     Y_results = [mat([0.01766, 0.04415, 0.02649, 0.1564, 0.4054, 0.2884, 0.0615]),
                  mat([0.01604, 0.0401, 0.02406, 0.1466, 0.4167, 0.2907, 0.0659])]
+
+    # factors = [
+    #     {'t_resid': 3, 'p': 175, 'Y0': mat(
+    #         [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 7.92},
+    #     {'t_resid': 3, 'p': 175, 'Y0': mat(
+    #         [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 8.6}]
+    # Y_results = [mat([0.01852, 0.0463, 0.02788, 0.1471, 0.4468, 0.252, 0.0615]),
+    #              mat([0.01752, 0.0438, 0.02628, 0.1421, 0.4533, 0.2533, 0.0637])]
+    # factors = [
+    #     {'t_resid': 3, 'p': 175, 'Y0': mat(
+    #         [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 9.16},
+    #     {'t_resid': 3, 'p': 175, 'Y0': mat(
+    #         [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 9.36}]
+    # Y_results = [mat([0.02174, 0.05435, 0.03261, 0.1489, 0.4017, 0.2796, 0.0611]),
+    #              mat([0.02112, 0.0528, 0.03168, 0.1405, 0.3966, 0.2947, 0.0626])]
+
+
     for i in range(len(factors)):
         factor = factors[i]
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=factor['t_resid'], p=factor['p'], Y0=factor[
@@ -225,12 +261,15 @@ def run():
             [1, 1, 1, 1, 1, 1, 0]
         ])
 
-        lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3.49, p=175, Y0=mat(
+        lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
             [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=10.36, n=7)
-
-        print 'K='
-        print X0_result
-        print 'result='
+        # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
+        #     [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=8.79, n=7)
+        # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
+        #     [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=9.96, n=7)
+        set_printoptions(precision=4,suppress=False)
+        t.make_result(K_model,X0_result,7)
+        print 'pre_result='
         print lump.result_for_forecast(X0_result)
         t.x0 = X0_result
 run()
