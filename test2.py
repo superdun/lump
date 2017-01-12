@@ -19,6 +19,7 @@ from numpy import *
 from scipy import optimize
 from RK4 import RK
 
+import matplotlib.pyplot as plts
 
 config = ConfigParser.ConfigParser()
 
@@ -227,8 +228,40 @@ def obj(x0):
         sum += sqa_deviation
     return sum
 
+class drawLine(object):
+    def __init__(self,varName,lump,resultId,factors):
+        self.varName=varName
+        self.lump = lump
+        self.resultId = resultId
+        self.factors=factors
 
+    def drawFunc(self,x):
+        y=[]
+        print x
+        print self.lump.result_for_forecast(self.factors)[0,1]
+        for i in x:
+            if self.varName == 'p':
+                self.lump.p = i
+                result = self.lump.result_for_forecast(self.factors)[0, self.resultId]
 
+            elif self.varName == 'time':
+                self.lump.t_resid = i
+                result = self.lump.result_for_forecast(self.factors)[0, self.resultId]
+
+            elif self.varName == 't':
+                self.lump.t = i
+                result = self.lump.result_for_forecast(self.factors)[0, self.resultId]
+
+            elif self.varName == 'r':
+                self.lump.r_oil = i
+                result = self.lump.result_for_forecast(self.factors)[0, self.resultId]
+
+            else:
+                print 'error'
+                result = 0
+            y.append(result)
+        print y
+        return array(y)
 def run():
     K_init = mat([
         [0, 0, 0, 0, 0, 0, 0],
@@ -263,13 +296,28 @@ def run():
 
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
             [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=10.36, n=7)
+
+        varName = raw_input('input the var:p/time/t/r')
+        varMin = float(raw_input('input min '))
+        varMax = float(raw_input('input max '))
+        stepNum = int(raw_input('how many steps?'))
+        resultId = int(raw_input('input result Id'))
+        varRange = linspace(varMin, varMax,num=stepNum)
+        draw = drawLine(varName=varName,lump=lump,resultId=int(resultId),factors=X0_result)
+        line, = plts.plot(varRange, draw.drawFunc(varRange), '--', linewidth=2)
+        dashes = [10, 5, 100, 5]
+        line.set_dashes(dashes)
+        plts.show()
         # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
         #     [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=8.79, n=7)
         # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
         #     [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=9.96, n=7)
-        set_printoptions(precision=4,suppress=False)
-        t.make_result(K_model,X0_result,7)
-        print 'pre_result='
-        print lump.result_for_forecast(X0_result)
-        t.x0 = X0_result
+
+
+
+        # set_printoptions(precision=4,suppress=False)
+        # t.make_result(K_model,X0_result,7)
+        # print 'pre_result='
+        # print lump.result_for_forecast(X0_result)
+        # t.x0 = X0_result
 run()
