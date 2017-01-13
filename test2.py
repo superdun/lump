@@ -21,6 +21,8 @@ from RK4 import RK
 
 import matplotlib.pyplot as plts
 
+
+
 config = ConfigParser.ConfigParser()
 
 
@@ -237,7 +239,6 @@ class drawLine(object):
 
     def drawFunc(self,x):
         y=[]
-        print x
         print self.lump.result_for_forecast(self.factors)[0,1]
         for i in x:
             if self.varName == 'p':
@@ -279,10 +280,13 @@ def run():
     t = Tools()
     t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
     for i in range(1):
-
-        X0_result = optimize.minimize(
-            obj, x0=t.x0, bounds=t.bounds, method='L-BFGS-B', tol=1e-7).x
-
+        filename=raw_input('file name>>>>')
+        if filename=='':
+            X0_result = optimize.minimize(
+                obj, x0=array(t.x0), bounds=t.bounds, method='L-BFGS-B', tol=1e-7).x
+            print X0_result
+        else:
+            X0_result=array(open('%s.txt'%filename,'r+').read().split(',')).astype(float)
         Molmasses = mat([0.8, 1.1, 1.8, 0.2, 0.11, 0.058, 0.012])
         K_model = mat([
             [0, 0, 0, 0, 0, 0, 0],
@@ -296,19 +300,25 @@ def run():
 
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
             [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=10.36, n=7)
+        while 1:
+            print X0_result
+            varName = raw_input('input the var:p/time/t/r')
+            varMin = float(raw_input('input min '))
+            varMax = float(raw_input('input max '))
+            stepNum = int(raw_input('how many steps?'))
+            varRange = linspace(varMin, varMax, num=stepNum)
+            resultId = (raw_input('input result Id,cut by comma')).split(',')
+            for i in range(len(resultId)):
+                draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i]), factors=X0_result)
+                plts.subplot(int('%d1%d' % (len(resultId), i + 1)))
+                plts.subplot(int('%d1%d' % (len(resultId), i + 1)))
+                plts.plot(varRange, draw.drawFunc(varRange), linewidth=2)
+                plts.ylabel("%d(%%)" % i)
+            plts.xlabel(varName)
+            plts.show()
 
-        varName = raw_input('input the var:p/time/t/r')
-        varMin = float(raw_input('input min '))
-        varMax = float(raw_input('input max '))
-        stepNum = int(raw_input('how many steps?'))
-        resultId = int(raw_input('input result Id'))
-        varRange = linspace(varMin, varMax,num=stepNum)
-        draw = drawLine(varName=varName,lump=lump,resultId=int(resultId),factors=X0_result)
-        line, = plts.plot(varRange, draw.drawFunc(varRange), '--', linewidth=2)
-        dashes = [10, 5, 100, 5]
-        line.set_dashes(dashes)
-        plts.show()
-        # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
+
+            # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
         #     [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=8.79, n=7)
         # lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
         #     [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=9.96, n=7)
