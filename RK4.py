@@ -53,9 +53,9 @@ class RK(object):
         K2 = func(x + stepLength / 2, y + (stepLength * K1 / 2).T)
         K3 = func(x + stepLength / 2, y + (stepLength * K2 / 2).T)
         K4 = func(x + stepLength, y + (stepLength * K3).T)
-        print y
-        print (stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6).T
-        print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+        # print y
+        # print (stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6).T
+        # print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
         return y + (stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6).T
     # 显式龙格库塔，即固定步长
 

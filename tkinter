@@ -1,0 +1,81 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
+"""
+ZetCode Tkinter tutorial
+
+In this program, we use the
+tkFileDialog to select a file from
+a filesystem.
+
+author: Jan Bodnar
+last modified: November 2015
+website: www.zetcode.com
+"""
+
+from Tkinter import Frame, Tk, BOTH, Text, Menu, END,RAISED
+import tkFileDialog
+import pickle
+
+
+class Example(Frame):
+    def __init__(self, parent):
+        Frame.__init__(self, parent)
+
+        self.parent = parent
+        self.initUI()
+
+    def initUI(self):
+        self.parent.title("集总模型")
+        self.pack(fill=BOTH, expand=1)
+
+        menubar = Menu(self.parent)
+        self.parent.config(menu=menubar)
+
+        fileMenu = Menu(menubar)
+        fileMenu.add_command(label=u"新建催化剂", command=self.onNewCata)
+        fileMenu.add_command(label=u"精确预测", command=self.onNewPre)
+        fileMenu.add_command(label=u"趋势预测", command=self.onNewGraph)
+
+        menubar.add_cascade(label="操作", menu=fileMenu)
+        self.txt = Text(self)
+        self.txt.pack(fill=BOTH, expand=1)
+
+    def preUI(self):
+        main_frame = Frame(self,relief=RAISED, borderwidth=1)
+        main_frame.pack(fill=BOTH, expand=True)
+
+    def onNewCata(self):
+        ftypes = [('集总模型', '*.lp')]
+        dlg = tkFileDialog.Open(self, filetypes=ftypes)
+        fl = dlg.show()
+        print fl
+        if fl != '':
+            lumpObj = self.readFile(fl)
+
+    def onNewPre(self):
+        ftypes = [('催化剂存档文件', '*.cat')]
+        dlg = tkFileDialog.Open(self, filetypes=ftypes)
+        fl = dlg.show()
+        print fl
+        if fl != '':
+            catObj = self.readFile(fl)
+
+    def onNewGraph(self):
+        pass
+
+    def readFile(self, filename):
+        f = open(filename, "r")
+        obj = pickle.load(f)
+        return obj
+
+
+def main():
+    root = Tk()
+    ex = Example(root)
+    root.geometry("300x250+300+300")
+    root.mainloop()
+
+
+if __name__ == '__main__':
+    main()
