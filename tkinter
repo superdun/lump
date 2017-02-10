@@ -1,21 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-"""
-ZetCode Tkinter tutorial
 
-In this program, we use the
-tkFileDialog to select a file from
-a filesystem.
 
-author: Jan Bodnar
-last modified: November 2015
-website: www.zetcode.com
-"""
-
-from Tkinter import Frame, Tk, BOTH, Text, Menu, END,RAISED
+from Tkinter import Frame, Tk, BOTH,  Menu,  RAISED, Label, W, N, E, S, Button, Entry, Listbox,END
+import numpy
 import tkFileDialog
 import pickle
+from test2 import *
+import ttk
 
 
 class Example(Frame):
@@ -31,6 +24,8 @@ class Example(Frame):
 
         menubar = Menu(self.parent)
         self.parent.config(menu=menubar)
+        self.frame0 = Frame(self, relief=RAISED)
+        self.frame0.pack(fill=BOTH, expand=True)
 
         fileMenu = Menu(menubar)
         fileMenu.add_command(label=u"新建催化剂", command=self.onNewCata)
@@ -38,20 +33,114 @@ class Example(Frame):
         fileMenu.add_command(label=u"趋势预测", command=self.onNewGraph)
 
         menubar.add_cascade(label="操作", menu=fileMenu)
-        self.txt = Text(self)
-        self.txt.pack(fill=BOTH, expand=1)
 
-    def preUI(self):
-        main_frame = Frame(self,relief=RAISED, borderwidth=1)
-        main_frame.pack(fill=BOTH, expand=True)
+    def preUI(self, sourceDate):
+        self.frame0.destroy()
+        self.initUI()
+        frame1 = Frame(self.frame0, relief=RAISED, borderwidth=1)
+        frame1.pack(fill=BOTH, expand=True)
 
+        frame2 = Frame(self.frame0, relief=RAISED, borderwidth=1)
+        frame2.pack(fill=BOTH, expand=True)
+
+        frame1.columnconfigure(1, weight=1)
+        # frame1.columnconfigure(9, weight=1)
+        frame1.columnconfigure(10, pad=7)
+        frame1.rowconfigure(5, weight=1)
+        frame1.rowconfigure(5, pad=7)
+
+        frame2.columnconfigure(8, pad=7,weight=1)
+        frame2.rowconfigure(8, pad=7)
+
+        lbl = Label(frame1, text="催化剂性质")
+        lbl.grid(row=0, column=0, columnspan=8, rowspan=1, sticky=W, pady=4, padx=5)
+        K_Mat_Tree = ttk.Treeview(frame1)
+        K_Mat_Tree['show'] = 'headings'
+        K_Mat_Tree = self.makeMatrixUI(7, K_Mat_Tree, sourceDate.K_model)
+        K_Mat_Tree.grid(row=1, column=0, columnspan=6, rowspan=5, sticky=E + W + S + N, pady=4, padx=5)
+
+        lbl = Label(frame1, text="优化方法:")
+        lbl.grid(row=2, column=6, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+        txt = Entry(frame1)
+        txt.insert(0, sourceDate.optMethod)
+        txt.configure(state='readonly')
+        txt.grid(row=2, column=8, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+
+        lbl = Label(frame1, text="集总数:")
+        lbl.grid(row=3, column=6, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+        txt = Entry(frame1)
+        txt.insert(0, sourceDate.n)
+        txt.configure(state='readonly')
+        txt.grid(row=3, column=8, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+
+        lbl = Label(frame1, text="精确度:")
+        lbl.grid(row=4, column=6, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+        txt = Entry(frame1)
+        txt.insert(0, sourceDate.tol)
+        txt.configure(state='readonly')
+        txt.grid(row=4, column=8, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+
+        cateDetailButton = Button(frame1, text="查看计算详情")
+        cateDetailButton.grid(row=5, column=8)
+        # ________________________________________
+        lbl = Label(frame2, text="待预测条件")
+        lbl.grid(row=0, column=0, sticky=W, columnspan=5, rowspan=1, pady=4, padx=5)
+
+        lbl = Label(frame2, text="初始组成（<1 英文逗号分割）:")
+        lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.Y0_input = Entry(frame2)
+        self.Y0_input.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="温度（K）")
+        lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.T_input = Entry(frame2)
+        self.T_input.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="压力（KPa）")
+        lbl.grid(row=3, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.p_input = Entry(frame2)
+        self.p_input.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="剂油比")
+        lbl.grid(row=4, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.roil_input = Entry(frame2)
+        self.roil_input.grid(row=4, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="停留时间（s）")
+        lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.t_input = Entry(frame2)
+        self.t_input.grid(row=5, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="碱氮含量（<1）")
+        lbl.grid(row=6, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.yn_input = Entry(frame2)
+        self.yn_input.insert(0, 0.0)
+        self.yn_input.grid(row=6, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="重芳烃含量（<1）")
+        lbl.grid(row=7, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.ya_input = Entry(frame2)
+        self.ya_input.grid(row=7, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="微分方程步长")
+        lbl.grid(row=8, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.step_input = Entry(frame2)
+        self.step_input.insert(0, 0.1)
+        self.step_input.grid(row=8, column=2, columnspan=3, rowspan=1, sticky=E, pady=4, padx=5)
+
+        self.preResult_LB = Listbox(frame2)
+        self.preResult_LB.grid(row=1, column=7, columnspan=2, rowspan=6, pady=4, padx=5)
+
+        cateDetailButton = Button(frame2, text="预测",command=self.doPre)
+        cateDetailButton.grid(row=8, column=7,columnspan=2)
     def onNewCata(self):
         ftypes = [('集总模型', '*.lp')]
         dlg = tkFileDialog.Open(self, filetypes=ftypes)
         fl = dlg.show()
-        print fl
+        # print flmakePreResultUI
         if fl != '':
             lumpObj = self.readFile(fl)
+            self.preUI()
 
     def onNewPre(self):
         ftypes = [('催化剂存档文件', '*.cat')]
@@ -59,10 +148,35 @@ class Example(Frame):
         fl = dlg.show()
         print fl
         if fl != '':
-            catObj = self.readFile(fl)
+            self.catObj = self.readFile(fl)
+            self.preUI(self.catObj)
 
     def onNewGraph(self):
         pass
+    def doPre(self):
+        catObj = self.catObj
+        t_resid  = float(self.t_input.get())
+        p = float(self.p_input.get())
+        Y0 = numpy.mat(self.Y0_input.get().split(',')).astype(numpy.float)
+        const_r=8.3145
+        w_aro=float(self.ya_input.get())
+        w_nitro=float(self.yn_input.get())
+        t = float(self.T_input.get())
+        r_oil = float(self.roil_input.get())
+        n = catObj.n
+        print [t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n]
+        result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n).tolist()[0]
+        self.makePreResultUI(self.preResult_LB,result)
+    def makeMatrixUI(self, n, targetTree, mat):
+        targetTree["columns"] = tuple(range(n))
+        for i in range(n):
+            targetTree.insert('', i, values=mat[i].tolist()[0])
+            targetTree.column(i, width=targetTree.winfo_width() / (n + 1))
+        return targetTree
+    def makePreResultUI(self,target,result):
+        for i in result:
+            target.insert(END, round(i,3))
+        return target
 
     def readFile(self, filename):
         f = open(filename, "r")
@@ -73,7 +187,7 @@ class Example(Frame):
 def main():
     root = Tk()
     ex = Example(root)
-    root.geometry("300x250+300+300")
+    root.geometry("800x640+300+300")
     root.mainloop()
 
 

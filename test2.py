@@ -398,7 +398,7 @@ def run2():
         ])
 
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
-            [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=10.36, n=7)
+            [0.481,0.472,0.047,0,0,0,0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=10.36, n=7)
 
         set_printoptions(precision=4, suppress=False)
         t.make_result(K_model, X0_result, 7)
@@ -434,7 +434,7 @@ class catObj(object):
         self.optMethod = optMethod
         self.X0_result = X0_result
         self.n = n
-        self.lump = K_model
+        self.K_model = K_model
 
 
 def saveCat(filename, n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result):
@@ -460,13 +460,14 @@ def newCat(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmass
 
 
 def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n):
-    lump = LumpModel(Molmasses=catObj.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
+    lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
-    t.make_result(catObj.K_model, catObj.X0_result, 7)
+    catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
     print 'pre_result='
-    print lump.result_for_forecast(catObj.X0_result)
-
+    result =  lump.result_for_forecast(catObj.X0_result)
+    print result
+    return result
 
 def test():
     K_init = mat([
@@ -503,5 +504,8 @@ def test():
     tol = 1e-7
     newCat('1', K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, Y_results, optMethod, tol, n)
 
-
-test()
+#
+# test()
+# f = open('1.cat', "r")
+# obj = pickle.load(f)
+# newPre(obj,3,175,mat([0.481, 0.472, 0.047, 0, 0, 0, 0]),8.3145,0.472,0,685,10.36,7)
