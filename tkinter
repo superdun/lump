@@ -3,7 +3,10 @@
 
 
 
-from Tkinter import Frame, Tk, BOTH,  Menu,  RAISED, Label, W, N, E, S, Button, Entry, Listbox,END
+from Tkinter import Frame, Tk, BOTH, Menu, RAISED, Label, W, N, E, S, Button, Entry, Listbox, END, VERTICAL
+from PIL import ImageTk
+import tkMessageBox as mbox
+
 import numpy
 import tkFileDialog
 import pickle
@@ -19,6 +22,12 @@ class Example(Frame):
         self.initUI()
 
     def initUI(self):
+        if hasattr(self, 'frame0'):
+            self.frame0.destroy()
+        self.initUIRoot()
+        self.initUIFrame()
+
+    def initUIRoot(self):
         self.parent.title("集总模型")
         self.pack(fill=BOTH, expand=1)
 
@@ -31,12 +40,52 @@ class Example(Frame):
         fileMenu.add_command(label=u"新建催化剂", command=self.onNewCata)
         fileMenu.add_command(label=u"精确预测", command=self.onNewPre)
         fileMenu.add_command(label=u"趋势预测", command=self.onNewGraph)
+        helpMenu = Menu(menubar)
+        helpMenu.add_command(label=u"关于", command=self.onHelp)
 
+        mainPageMenu = Menu(menubar)
+        mainPageMenu.add_command(label=u"主页", command=self.initUI)
+        menubar.add_cascade(label="主页", menu=mainPageMenu)
         menubar.add_cascade(label="操作", menu=fileMenu)
+        menubar.add_cascade(label="帮助", menu=helpMenu)
+
+    def initUIFrame(self):
+        self.frame0.columnconfigure(0, pad=5)
+        self.frame0.columnconfigure(1, pad=5, weight=1)
+        self.frame0.columnconfigure(2, pad=5)
+        self.frame0.columnconfigure(3, pad=5, weight=1)
+        self.frame0.columnconfigure(4, pad=5)
+        self.frame0.rowconfigure(0, pad=7)
+        self.frame0.rowconfigure(1, pad=7, weight=1)
+        self.frame0.rowconfigure(2, pad=7, weight=1)
+
+        catImg = ImageTk.PhotoImage(file="/home/dun/opt/htdocs/lump/imgs/cat.png")
+        preImg = ImageTk.PhotoImage(file="/home/dun/opt/htdocs/lump/imgs/pre.png")
+        chartImg = ImageTk.PhotoImage(file="/home/dun/opt/htdocs/lump/imgs/chart.png")
+
+        preButton = Button(self.frame0, command=self.onNewPre)
+        preButton.config(image=preImg)
+        preButton.image = preImg
+        preButton.grid(row=1, column=2, sticky=S)
+        cateButton = Button(self.frame0, command=self.onNewCata)
+        cateButton.config(image=catImg)
+        cateButton.image = catImg
+        cateButton.grid(row=1, column=1, sticky=S)
+        chartButton = Button(self.frame0, command=self.onNewGraph)
+        chartButton.config(image=chartImg)
+        chartButton.image = chartImg
+        chartButton.grid(row=1, column=3, sticky=S)
+
+        lbl = Label(self.frame0, text="新建催化剂")
+        lbl.grid(row=2, column=1, sticky=N)
+        lbl = Label(self.frame0, text="精确预测")
+        lbl.grid(row=2, column=2, sticky=N)
+        lbl = Label(self.frame0, text="趋势预测")
+        lbl.grid(row=2, column=3, sticky=N)
 
     def preUI(self, sourceDate):
         self.frame0.destroy()
-        self.initUI()
+        self.initUIRoot()
         frame1 = Frame(self.frame0, relief=RAISED, borderwidth=1)
         frame1.pack(fill=BOTH, expand=True)
 
@@ -49,7 +98,7 @@ class Example(Frame):
         frame1.rowconfigure(5, weight=1)
         frame1.rowconfigure(5, pad=7)
 
-        frame2.columnconfigure(8, pad=7,weight=1)
+        frame2.columnconfigure(8, pad=7, weight=1)
         frame2.rowconfigure(8, pad=7)
 
         lbl = Label(frame1, text="催化剂性质")
@@ -80,7 +129,7 @@ class Example(Frame):
         txt.configure(state='readonly')
         txt.grid(row=4, column=8, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
 
-        cateDetailButton = Button(frame1, text="查看计算详情")
+        cateDetailButton = Button(frame1, text="查看催化剂详情")
         cateDetailButton.grid(row=5, column=8)
         # ________________________________________
         lbl = Label(frame2, text="待预测条件")
@@ -127,12 +176,91 @@ class Example(Frame):
         self.step_input = Entry(frame2)
         self.step_input.insert(0, 0.1)
         self.step_input.grid(row=8, column=2, columnspan=3, rowspan=1, sticky=E, pady=4, padx=5)
-
         self.preResult_LB = Listbox(frame2)
         self.preResult_LB.grid(row=1, column=7, columnspan=2, rowspan=6, pady=4, padx=5)
 
-        cateDetailButton = Button(frame2, text="预测",command=self.doPre)
-        cateDetailButton.grid(row=8, column=7,columnspan=2)
+        cateDetailButton = Button(frame2, text="预测", command=self.doPre)
+        cateDetailButton.grid(row=8, column=7, columnspan=2)
+
+    def cateUI(self):
+        self.frame0.destroy()
+        self.initUIRoot()
+        frame1 = Frame(self.frame0, relief=RAISED, borderwidth=1)
+        frame1.pack(fill=BOTH, expand=True)
+
+        frame1.columnconfigure(0, weight=1)
+        # frame1.columnconfigure(9, weight=1)
+        frame1.rowconfigure(0, weight=1)
+
+        factor_Tree = ttk.Treeview(frame1)
+        factor_Tree['show'] = 'headings'
+        factor_Tree["columns"] = ['t_resid', 't', 'r_oil', 'p', 'Y0', 'Y_results', 'w_aro', 'w_nitro']
+        #
+        factor_Tree.heading("t", text="温度")
+        factor_Tree.column("t", width=self.winfo_width() / 8)
+        factor_Tree.heading("r_oil", text="剂油比")
+        factor_Tree.column("r_oil", width=self.winfo_width() / 8)
+        factor_Tree.heading("p", text="压力")
+        factor_Tree.column("p", width=self.winfo_width() / 8)
+        factor_Tree.heading("Y0", text="初始组成")
+        factor_Tree.column("Y0", width=self.winfo_width() / 8)
+        factor_Tree.heading("Y_results", text="产物组成")
+        factor_Tree.column("Y_results", width=self.winfo_width() / 8)
+        factor_Tree.heading("w_aro", text="重芳烃含量")
+        factor_Tree.column("w_aro", width=self.winfo_width() / 8)
+        factor_Tree.heading("w_nitro", text="碱氮含量")
+        factor_Tree.column("w_nitro", width=self.winfo_width() / 8)
+        factor_Tree.heading("t_resid", text="停留时间")
+        factor_Tree.column("t_resid", width=self.winfo_width() / 8)
+        factor_Tree.grid(row=0, column=0, pady=4, padx=5)
+        self.factor_Tree = factor_Tree
+        frame2 = Frame(self.frame0, relief=RAISED, borderwidth=1)
+        frame2.pack(fill=BOTH, expand=True)
+
+        lbl = Label(frame2, text="停留时间（s）")
+        lbl.grid(row=0, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.t_input = Entry(frame2)
+        self.t_input.grid(row=0, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="温度（K）")
+        lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.T_input = Entry(frame2)
+        self.T_input.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="剂油比")
+        lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.roil_input = Entry(frame2)
+        self.roil_input.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="压力（KPa）")
+        lbl.grid(row=3, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.p_input = Entry(frame2)
+        self.p_input.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="初始组成（<1 英文逗号分割）:")
+        lbl.grid(row=4, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.Y0_input = Entry(frame2)
+        self.Y0_input.grid(row=4, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="产物组成（<1 英文逗号分割）:")
+        lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.Y0_input = Entry(frame2)
+        self.Y0_input.grid(row=5, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="碱氮含量（<1）")
+        lbl.grid(row=6, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.yn_input = Entry(frame2)
+        self.yn_input.insert(0, 0.0)
+        self.yn_input.grid(row=6, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="重芳烃含量（<1）")
+        lbl.grid(row=7, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.ya_input = Entry(frame2)
+        self.ya_input.grid(row=7, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        addButton = Button(frame2, command=self.addFactors, text="添加条件")
+        addButton.grid(row=8, column=2, sticky=E)
+
     def onNewCata(self):
         ftypes = [('集总模型', '*.lp')]
         dlg = tkFileDialog.Open(self, filetypes=ftypes)
@@ -140,7 +268,7 @@ class Example(Frame):
         # print flmakePreResultUI
         if fl != '':
             lumpObj = self.readFile(fl)
-            self.preUI()
+            self.cateUI()
 
     def onNewPre(self):
         ftypes = [('催化剂存档文件', '*.cat')]
@@ -153,29 +281,46 @@ class Example(Frame):
 
     def onNewGraph(self):
         pass
+
+    def onHelp(self):
+        mbox.showinfo("集总模型软件", "欧阳福生课题组\n华东理工大学")
+
     def doPre(self):
         catObj = self.catObj
-        t_resid  = float(self.t_input.get())
+        t_resid = float(self.t_input.get())
         p = float(self.p_input.get())
         Y0 = numpy.mat(self.Y0_input.get().split(',')).astype(numpy.float)
-        const_r=8.3145
-        w_aro=float(self.ya_input.get())
-        w_nitro=float(self.yn_input.get())
+        const_r = 8.3145
+        w_aro = float(self.ya_input.get())
+        w_nitro = float(self.yn_input.get())
         t = float(self.T_input.get())
         r_oil = float(self.roil_input.get())
         n = catObj.n
         print [t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n]
         result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n).tolist()[0]
-        self.makePreResultUI(self.preResult_LB,result)
+        self.makePreResultUI(self.preResult_LB, result)
+
+    def addFactors(self):
+        t_resid = float(self.t_input.get())
+        p = float(self.p_input.get())
+        Y0_raw = self.Y0_input.get()
+        Y0 = numpy.mat(Y0_raw.split(',')).astype(numpy.float)
+        w_aro = float(self.ya_input.get())
+        w_nitro = float(self.yn_input.get())
+        t = float(self.T_input.get())
+        r_oil = float(self.roil_input.get())
+        self.factor_Tree.insert('', END, values=[t_resid, t, r_oil, p, Y0_raw, w_aro, w_nitro])
+
     def makeMatrixUI(self, n, targetTree, mat):
         targetTree["columns"] = tuple(range(n))
         for i in range(n):
             targetTree.insert('', i, values=mat[i].tolist()[0])
             targetTree.column(i, width=targetTree.winfo_width() / (n + 1))
         return targetTree
-    def makePreResultUI(self,target,result):
+
+    def makePreResultUI(self, target, result):
         for i in result:
-            target.insert(END, round(i,3))
+            target.insert(END, round(i, 3))
         return target
 
     def readFile(self, filename):
