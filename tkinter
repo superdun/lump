@@ -3,7 +3,8 @@
 
 
 
-from Tkinter import Frame, Tk, BOTH, Menu, RAISED, Label, W, N, E, S, Button, Entry, Listbox, END, VERTICAL
+from Tkinter import Frame, Tk, BOTH, Menu, RAISED, Label, W, N, E, S, Button, Entry, Listbox, END, VERTICAL, Message, \
+    StringVar
 from PIL import ImageTk
 import tkMessageBox as mbox
 
@@ -16,6 +17,7 @@ import ttk
 
 class Example(Frame):
     def __init__(self, parent):
+        self.catFactors = {}
         Frame.__init__(self, parent)
 
         self.parent = parent
@@ -59,9 +61,9 @@ class Example(Frame):
         self.frame0.rowconfigure(1, pad=7, weight=1)
         self.frame0.rowconfigure(2, pad=7, weight=1)
 
-        catImg = ImageTk.PhotoImage(file="/home/dun/opt/htdocs/lump/imgs/cat.png")
-        preImg = ImageTk.PhotoImage(file="/home/dun/opt/htdocs/lump/imgs/pre.png")
-        chartImg = ImageTk.PhotoImage(file="/home/dun/opt/htdocs/lump/imgs/chart.png")
+        catImg = ImageTk.PhotoImage(file="./imgs/cat.png")
+        preImg = ImageTk.PhotoImage(file="./imgs/pre.png")
+        chartImg = ImageTk.PhotoImage(file="./imgs/chart.png")
 
         preButton = Button(self.frame0, command=self.onNewPre)
         preButton.config(image=preImg)
@@ -185,12 +187,23 @@ class Example(Frame):
     def cateUI(self):
         self.frame0.destroy()
         self.initUIRoot()
+        frame4 = Frame(self.frame0, relief=RAISED, borderwidth=1)
+        frame4.pack(fill=BOTH)
+
         frame1 = Frame(self.frame0, relief=RAISED, borderwidth=1)
         frame1.pack(fill=BOTH, expand=True)
 
         frame1.columnconfigure(0, weight=1)
         # frame1.columnconfigure(9, weight=1)
         frame1.rowconfigure(0, weight=1)
+
+        lbl = Label(frame4, text="已输入温度组数")
+        lbl.grid(row=0, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.varCountT = StringVar()
+        self.countT = Message(frame4, textvariable=self.varCountT)
+        self.varCountT.set('0')
+
+        self.countT.grid(row=0, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         factor_Tree = ttk.Treeview(frame1)
         factor_Tree['show'] = 'headings'
@@ -217,6 +230,9 @@ class Example(Frame):
         frame2 = Frame(self.frame0, relief=RAISED, borderwidth=1)
         frame2.pack(fill=BOTH, expand=True)
 
+        frame2.columnconfigure(0, weight=1)
+        frame2.columnconfigure(8, weight=1)
+
         lbl = Label(frame2, text="停留时间（s）")
         lbl.grid(row=0, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.t_input = Entry(frame2)
@@ -238,28 +254,33 @@ class Example(Frame):
         self.p_input.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="初始组成（<1 英文逗号分割）:")
-        lbl.grid(row=4, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl.grid(row=0, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
         self.Y0_input = Entry(frame2)
-        self.Y0_input.grid(row=4, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.Y0_input.grid(row=0, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="产物组成（<1 英文逗号分割）:")
-        lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl.grid(row=1, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
         self.Y0_input = Entry(frame2)
-        self.Y0_input.grid(row=5, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.Y0_input.grid(row=1, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="碱氮含量（<1）")
-        lbl.grid(row=6, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl.grid(row=2, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
         self.yn_input = Entry(frame2)
         self.yn_input.insert(0, 0.0)
-        self.yn_input.grid(row=6, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.yn_input.grid(row=2, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="重芳烃含量（<1）")
-        lbl.grid(row=7, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl.grid(row=3, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
         self.ya_input = Entry(frame2)
-        self.ya_input.grid(row=7, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.ya_input.grid(row=3, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+
+        lbl = Label(frame2, text="分子质量（逗号分割）")
+        lbl.grid(row=4, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.Molmasses = Entry(frame2)
+        self.Molmasses.grid(row=4, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         addButton = Button(frame2, command=self.addFactors, text="添加条件")
-        addButton.grid(row=8, column=2, sticky=E)
+        addButton.grid(row=9, column=2, sticky=E)
 
     def onNewCata(self):
         ftypes = [('集总模型', '*.lp')]
@@ -310,6 +331,14 @@ class Example(Frame):
         t = float(self.T_input.get())
         r_oil = float(self.roil_input.get())
         self.factor_Tree.insert('', END, values=[t_resid, t, r_oil, p, Y0_raw, w_aro, w_nitro])
+        if self.catFactors.has_key(t):
+            self.catFactors[t].append([t_resid, t, r_oil, p, Y0, w_aro, w_nitro])
+        else:
+            self.catFactors[t]=[t_resid, t, r_oil, p, Y0, w_aro, w_nitro]
+        print self.catFactors
+        self.varCountT.set(len(self.catFactors))
+        self.Molmasses.configure(state='readonly')
+
 
     def makeMatrixUI(self, n, targetTree, mat):
         targetTree["columns"] = tuple(range(n))
