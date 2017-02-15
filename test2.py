@@ -182,7 +182,7 @@ class Tools(object):
         print kn_result
         print 'cata='
         print cata_result
-
+        return {'K_result':K_result,'ka_result':ka_result,'kn_result':kn_result,'cata_result':cata_result}
     def obj_para_constructor(self, Molmasses, K_model, factors, Y_results):
         self.Molmasses = Molmasses
         self.K_model = K_model
@@ -424,7 +424,7 @@ def run2():
 
 
 class catObj(object):
-    def __init__(self, n, K_model, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result):
+    def __init__(self, n, K_model, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t):
         self.K_init = K_init
         self.ka_init = ka_init
         self.kn_init = kn_init
@@ -435,11 +435,15 @@ class catObj(object):
         self.X0_result = X0_result
         self.n = n
         self.K_model = K_model
+        self.withTemp=withTemp
+        self.Ea=Ea
+        self.Ka =Ka
+        self.t=t
 
 
-def saveCat(filename, n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result):
+def saveCat(filename, n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,Ea,Ka,t):
     fileObject = open('/home/dun/opt/htdocs/lump/%s.cat' % filename, 'wb')
-    a = catObj(n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result)
+    a = catObj(n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,Ea,Ka,t)
     pickle.dump(a, fileObject)
     fileObject.close()
 
@@ -448,15 +452,31 @@ def loadCat(filename):
     fileObject = open('/home/dun/opt/htdocs/lump/%s.cat' % filename, 'r')
     return pickle.load(fileObject)
 
-
-def newCat(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, Y_results, optMethod, tol,
+def getEa(K1,K2,t1,t2,R=8.3145):
+    Ea = (R*t1*t2/(t1-t2))*log(K1/K2)
+    return [Ea,K1*math.e**(Ea/(t1*R))]
+def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     t = Tools()
     t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
-    t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors, Y_results=Y_results)
+    t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors, Y_results=factors.Y_results)
     X0_result = optimize.minimize(
         obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
-    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init, t, tol, optMethod, X0_result)
+    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init, tol, optMethod, X0_result,mat(),mat(),factors.t)
+def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, Y_results, optMethod, tol,
+           n):
+    X0_results = []
+    temps = []
+    for i in factors:
+        for j in factors[i]:
+            t = Tools()
+            t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
+            t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=j, Y_results=j.Y_results)
+            X0_results.append( optimize.minimize(
+                obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x)
+            temps.append(j.t)
+    Ea,Ka=getEa(X0_results[0],X0_results[1],temps[0],temps[1],8.3145)
+    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init, tol, optMethod, X0_results,Ea,Ka,temps)
 
 
 def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n):
@@ -504,6 +524,10 @@ def test():
     tol = 1e-7
     newCat('1', K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, Y_results, optMethod, tol, n)
 
+
+# a = mat([[2,4],[6,8]])
+# b=log(mat([[1,2],[3,3.0]]))
+# print a/b
 #
 # test()
 # f = open('1.cat', "r")

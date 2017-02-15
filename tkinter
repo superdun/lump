@@ -260,8 +260,8 @@ class Example(Frame):
 
         lbl = Label(frame2, text="产物组成（<1 英文逗号分割）:")
         lbl.grid(row=1, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
-        self.Y0_input = Entry(frame2)
-        self.Y0_input.grid(row=1, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.Y_results_input = Entry(frame2)
+        self.Y_results_input.grid(row=1, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="碱氮含量（<1）")
         lbl.grid(row=2, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
@@ -326,15 +326,17 @@ class Example(Frame):
         p = float(self.p_input.get())
         Y0_raw = self.Y0_input.get()
         Y0 = numpy.mat(Y0_raw.split(',')).astype(numpy.float)
+        Y_results_raw = self.Y_results_input.get()
+        Y_results = numpy.mat(Y_results_raw.split(',')).astype(numpy.float)
         w_aro = float(self.ya_input.get())
         w_nitro = float(self.yn_input.get())
         t = float(self.T_input.get())
         r_oil = float(self.roil_input.get())
-        self.factor_Tree.insert('', END, values=[t_resid, t, r_oil, p, Y0_raw, w_aro, w_nitro])
+        self.factor_Tree.insert('', END, values=[t_resid, t, r_oil, p, Y0_raw,Y_results_raw, w_aro, w_nitro])
         if self.catFactors.has_key(t):
-            self.catFactors[t].append([t_resid, t, r_oil, p, Y0, w_aro, w_nitro])
+            self.catFactors[t].append({'t_resid':t_resid, 't':t, 'r_oil':r_oil, 'p':p, 'Y0':Y0, 'Y_results':Y_results,'w_aro':w_aro, 'w_nitro':w_nitro})
         else:
-            self.catFactors[t]=[t_resid, t, r_oil, p, Y0, w_aro, w_nitro]
+            self.catFactors[t]=[{'t_resid':t_resid, 't':t, 'r_oil':r_oil, 'p':p, 'Y0':Y0, 'Y_results':Y_results,'w_aro':w_aro, 'w_nitro':w_nitro}]
         print self.catFactors
         self.varCountT.set(len(self.catFactors))
         self.Molmasses.configure(state='readonly')
