@@ -312,7 +312,7 @@ def run():
     const_cata_init = 1
     t = Tools()
     t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
-    t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors, Y_results=Y_results)
+    t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors)
     for i in range(1):
         filename = raw_input('file name>>>>')
         if filename == '':
@@ -476,7 +476,7 @@ def newCatWithKa( K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses,
     for i in factors:
         for j in factors[i]:
             t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
-            t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=j, Y_results=j['Y_results'])
+            t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=j)
             X0_results.append( optimize.minimize(
                 obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x)
             temps.append(j.t)
