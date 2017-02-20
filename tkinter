@@ -3,7 +3,7 @@
 
 
 
-from Tkinter import Frame, Tk, BOTH, Menu, RAISED, Label, W, N, E, S, Button, Entry, Listbox, END, VERTICAL, Message, \
+from Tkinter import Frame, Tk, BOTH, Menu, RAISED, Label, W, N, E, S, Button, Entry , Listbox, END, DISABLED,VERTICAL, Message, \
     StringVar
 from PIL import ImageTk
 import tkMessageBox as mbox
@@ -276,11 +276,14 @@ class Example(Frame):
 
         lbl = Label(frame2, text="分子质量（逗号分割）")
         lbl.grid(row=4, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
-        self.Molmasses = Entry(frame2)
-        self.Molmasses.grid(row=4, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.Molmasses_input = Entry(frame2)
+        self.Molmasses_input.grid(row=4, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         addButton = Button(frame2, command=self.addFactors, text="添加条件")
         addButton.grid(row=9, column=2, sticky=E)
+
+        self.newCatButton = Button(frame2, command=self.newCata, text="开始计算",state=DISABLED)
+        self.newCatButton.grid(row=9, column=6, sticky=E)
 
     def onNewCata(self):
         ftypes = [('集总模型', '*.lp')]
@@ -288,7 +291,8 @@ class Example(Frame):
         fl = dlg.show()
         # print flmakePreResultUI
         if fl != '':
-            lumpObj = self.readFile(fl)
+            self.lumpObj = self.readFile(fl)
+            print self.lumpObj
             self.cateUI()
 
     def onNewPre(self):
@@ -321,6 +325,7 @@ class Example(Frame):
         result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n).tolist()[0]
         self.makePreResultUI(self.preResult_LB, result)
 
+
     def addFactors(self):
         t_resid = float(self.t_input.get())
         p = float(self.p_input.get())
@@ -332,6 +337,7 @@ class Example(Frame):
         w_nitro = float(self.yn_input.get())
         t = float(self.T_input.get())
         r_oil = float(self.roil_input.get())
+        self.Molmasses = numpy.mat(self.Molmasses_input.get().split(',')).astype(numpy.float)
         self.factor_Tree.insert('', END, values=[t_resid, t, r_oil, p, Y0_raw,Y_results_raw, w_aro, w_nitro])
         if self.catFactors.has_key(t):
             self.catFactors[t].append({'t_resid':t_resid, 't':t, 'r_oil':r_oil, 'p':p, 'Y0':Y0, 'Y_results':Y_results,'w_aro':w_aro, 'w_nitro':w_nitro})
@@ -339,9 +345,14 @@ class Example(Frame):
             self.catFactors[t]=[{'t_resid':t_resid, 't':t, 'r_oil':r_oil, 'p':p, 'Y0':Y0, 'Y_results':Y_results,'w_aro':w_aro, 'w_nitro':w_nitro}]
         print self.catFactors
         self.varCountT.set(len(self.catFactors))
-        self.Molmasses.configure(state='readonly')
+        self.Molmasses_input.configure(state='readonly')
+        self.newCatButton.configure(state='active')
+    def newCata(self):
 
-
+        if len(self.catFactors)==1:
+            newCatNoKa(self.lumpObj,1,0,1,self.lumpObj,self.Molmasses,self.catFactors.values()[0],'L-BFGS-B',1e-7,self.lumpObj.shape[0])
+        else:
+            newCatWithKa(self.lumpObj,1,0,1,self.lumpObj,self.Molmasses,self.catFactors,'L-BFGS-B',1e-7,self.lumpObj.shape[0])
     def makeMatrixUI(self, n, targetTree, mat):
         targetTree["columns"] = tuple(range(n))
         for i in range(n):

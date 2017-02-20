@@ -183,10 +183,13 @@ class Tools(object):
         print 'cata='
         print cata_result
         return {'K_result':K_result,'ka_result':ka_result,'kn_result':kn_result,'cata_result':cata_result}
-    def obj_para_constructor(self, Molmasses, K_model, factors, Y_results):
+    def obj_para_constructor(self, Molmasses, K_model, factors):
         self.Molmasses = Molmasses
         self.K_model = K_model
         self.factors = factors
+        Y_results = []
+        for i in factors:
+            Y_results.append(i['Y_results'])
         self.Y_results = Y_results
 
 
@@ -454,29 +457,31 @@ def loadCat(filename):
 
 def getEa(K1,K2,t1,t2,R=8.3145):
     Ea = (R*t1*t2/(t1-t2))*log(K1/K2)
-    return [Ea,K1*math.e**(Ea/(t1*R))]
-def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
+    return [Ea,K1/(math.e**(Ea/(t1*R)))]
+def getKByT(Ka,Ea,t,R=8.3145):
+    return multiply(Ka,(math.e**(Ea/(t*R))))
+def newCatNoKa( K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     t = Tools()
     t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
-    t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors, Y_results=factors.Y_results)
+    t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors)
     X0_result = optimize.minimize(
         obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
-    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init, tol, optMethod, X0_result,mat(),mat(),factors.t)
-def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, Y_results, optMethod, tol,
+    # saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_result,mat([]),mat([]),factors.t)
+def newCatWithKa( K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     X0_results = []
     temps = []
+    t=Tools()
     for i in factors:
         for j in factors[i]:
-            t = Tools()
             t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
-            t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=j, Y_results=j.Y_results)
+            t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=j, Y_results=j['Y_results'])
             X0_results.append( optimize.minimize(
                 obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x)
             temps.append(j.t)
     Ea,Ka=getEa(X0_results[0],X0_results[1],temps[0],temps[1],8.3145)
-    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init, tol, optMethod, X0_results,Ea,Ka,temps)
+    # saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_results,Ea,Ka,temps)
 
 
 def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n):
@@ -484,10 +489,18 @@ def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n):
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
     catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
-    print 'pre_result='
-    result =  lump.result_for_forecast(catObj.X0_result)
-    print result
-    return result
+    if not catObj.withTemp:
+        print 'pre_result='
+        result = lump.result_for_forecast(catObj.X0_result)
+        print result
+        return result
+    else:
+        X0 = getKByT(catObj.Ka,catObj.Ea,t,R=8.3145)
+        print 'pre_result='
+        result = lump.result_for_forecast(X0)
+        print result
+        return result
+
 
 def test():
     K_init = mat([
