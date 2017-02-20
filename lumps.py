@@ -342,7 +342,7 @@ def run():
         ])
 
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=2.91, p=160, Y0=mat(
-            [0.5123, 0.3696, 0.1181, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.3696, w_nitro=0.001011, t=793.15, r_oil=7.1,
+            [0.5123,0.3696,0.1181,0,0,0,0]), const_r=8.3145, w_aro=0.3696, w_nitro=0.001011, t=793.15, r_oil=7.1,
                          n=7)
 
         print 'K='

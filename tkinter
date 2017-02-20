@@ -356,6 +356,7 @@ class Example(Frame):
         lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.T_input = Entry(frame2)
         self.T_input.delete(0, 'end')
+        self.T_input.insert(0, 0)
         self.T_input.configure(state='readonly')
         self.T_input.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
@@ -417,28 +418,36 @@ class Example(Frame):
         self.rangeMax.grid(row=4, column=8, columnspan=1, sticky=W, rowspan=1,  pady=4, padx=5)
 
         lbl = Label(frame2, text="结果集（英文逗号分割）")
-        lbl.grid(row=6, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl.grid(row=5, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.chartResultId = Entry(frame2)
         self.chartResultId.insert(0, '1,2,3,4,5,6,7')
-        self.chartResultId.grid(row=6, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
+        self.chartResultId.grid(row=5, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
+
+        lbl = Label(frame2, text="点数")
+        lbl.grid(row=6, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.stepNum = Entry(frame2)
+        self.stepNum.grid(row=6, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
 
-        cateDetailButton = Button(frame2, text="预测趋势", command=self.doPre)
+        cateDetailButton = Button(frame2, text="预测趋势", command=self.doChart)
         cateDetailButton.grid(row=8, column=6, columnspan=2)
     def onSelecetedVar(self,event):
         varName=self.var.get()
         if varName == u'温度':
-            #u'温度',,,u'停留时间'
             self.T_input.delete(0, 'end')
+            self.T_input.insert(0,0)
             self.T_input.configure(state="readonly")
         elif varName == u'压力':
             self.p_input.delete(0, 'end')
+            self.p_input.insert(0,0)
             self.p_input.configure(state="readonly")
         elif varName ==u'剂油比':
             self.roil_input.delete(0, 'end')
+            self.roil_input.insert(0,0)
             self.roil_input.configure(state="readonly")
         elif varName ==u'停留时间':
             self.t_input.delete(0, 'end')
+            self.t_input.insert(0,0)
             self.t_input.configure(state="readonly")
 
         if self.lastVar == u'温度':
@@ -499,7 +508,38 @@ class Example(Frame):
         result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n).tolist()[0]
         self.makePreResultUI(self.preResult_LB, result)
 
+    def doChart(self):
+        catObj = self.catObj
+        t_resid = float(self.t_input.get())
+        p = float(self.p_input.get())
+        Y0 = numpy.mat(self.Y0_input.get().split(',')).astype(numpy.float)
+        const_r = 8.3145
+        w_aro = float(self.ya_input.get())
+        w_nitro = float(self.yn_input.get())
+        t = float(self.T_input.get())
+        r_oil = float(self.roil_input.get())
+        stepNum = int(self.stepNum.get())
+        resultId = self.chartResultId.get()
+        varMin = float(self.rangeMin.get())
+        varMax = float(self.rangeMax.get())
+        n = catObj.n
+        varName=''
+        if self.lastVar == u'温度':
+            varName = 't'
+        elif self.lastVar == u'压力':
+            varName = 'p'
+        elif self.lastVar ==u'剂油比':
+            varName = 'r_oil'
+        elif self.lastVar ==u'停留时间':
+            varName = 't_resid'
+        chartConfig={}
+        chartConfig['varName']=varName
+        chartConfig['stepNum']=stepNum
 
+        chartConfig['varMin']=varMin
+        chartConfig['varMax']=varMax
+        chartConfig['resultId']=resultId
+        result = newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartConfig)
     def addFactors(self):
         t_resid = float(self.t_input.get())
         p = float(self.p_input.get())
