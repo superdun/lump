@@ -124,6 +124,7 @@ class LumpModel(object):
         # print K
         # 最后一行前三个元素分别对应k_aroAdsorbDeact,k_nitroAdsorbDeact,const_cataDeact
         k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact = x0[-n:][:3]
+
         return self.func_dydx(K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact, x)
 
     def result_for_opt(self, x0):
@@ -227,7 +228,7 @@ def obj(x0, args):
     #              mat([0.01752,0.0438,0.02628,0.1421,0.4533,0.2533,0.0637])]
     # factors = [
     #     {'t_resid': 3, 'p': 175, 'Y0': mat(
-    #         [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 9.16},
+    #         [0.481,0.472,0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 9.16},
     #     {'t_resid': 3, 'p': 175, 'Y0': mat(
     #         [0.481, 0.472, 0.047, 0, 0, 0, 0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 9.36}]
     # Y_results = [mat([0.02174, 0.05435, 0.03261, 0.1489, 0.4017, 0.2796, 0.0611]),
@@ -254,7 +255,6 @@ class drawLine(object):
 
     def drawFunc(self, x):
         y = []
-        print self.lump.result_for_forecast(self.factors.X0_result)[0, 1]
         for i in x:
             if self.varName == 'p':
                 self.lump.p = i
@@ -262,6 +262,7 @@ class drawLine(object):
 
             elif self.varName == 'time':
                 self.lump.t_resid = i
+
                 result = self.lump.result_for_forecast(self.factors.X0_result)[0, self.resultId]
 
             elif self.varName == 't':
@@ -279,7 +280,35 @@ class drawLine(object):
             y.append(result)
         print y
         return array(y)
+    def getXLable(self, varName):
+        if varName == 'p':
+            return 'pressure (kPa)'
 
+        elif varName == 'time':
+            return ' residence time (s)'
+        elif self.varName == 't':
+            return 'temperature (K)'
+
+        elif self.varName == 'r':
+
+            return 'solvent to oil ratio'
+        else:
+            return 'error!'
+
+    def onpick(self,event):
+        # on the pick event, find the orig line corresponding to the
+        # legend proxy line, and toggle the visibility
+        legline = event.artist
+        origline = self.lined[legline]
+        vis = not origline.get_visible()
+        origline.set_visible(vis)
+        # Change the alpha on the line in the legend so we can see what lines
+        # have been toggled
+        if vis:
+            legline.set_alpha(1.0)
+        else:
+            legline.set_alpha(0.2)
+        self.fig.canvas.draw()
 
 def run():
     K_init = mat([
@@ -445,14 +474,19 @@ class catObj(object):
         self.t=t
 
 
-def saveCat(filename, n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,Ea,Ka,t):
-    fileObject = open('/home/dun/opt/htdocs/lump/%s.cat' % filename, 'wb')
-    a = catObj(n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,Ea,Ka,t)
+def saveCat(filename, n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t):
+    if filename[-4:]=='.cat':
+        fileObject = open(filename, 'wb')
+    else:
+        fileObject = open('%s.cat' % filename, 'wb')
+    #          n, K_model, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t
+    a = catObj(n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t)
     pickle.dump(a, fileObject)
     fileObject.close()
 
 
 def loadCat(filename):
+
     fileObject = open('/home/dun/opt/htdocs/lump/%s.cat' % filename, 'r')
     return pickle.load(fileObject)
 
@@ -461,15 +495,16 @@ def getEa(K1,K2,t1,t2,R=8.3145):
     return [Ea,K1/(math.e**(Ea/(t1*R)))]
 def getKByT(Ka,Ea,t,R=8.3145):
     return multiply(Ka,(math.e**(Ea/(t*R))))
-def newCatNoKa( K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
+def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     t = Tools()
     t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
     t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors)
     X0_result = optimize.minimize(
         obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
-    # saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_result,mat([]),mat([]),factors.t)
-def newCatWithKa( K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
+    withTemp=0
+    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_result,withTemp,mat([]),mat([]),factors[0]['t'])
+def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     X0_results = []
     temps = []
@@ -482,7 +517,8 @@ def newCatWithKa( K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses,
                 obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x)
             temps.append(j.t)
     Ea,Ka=getEa(X0_results[0],X0_results[1],temps[0],temps[1],8.3145)
-    # saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_results,Ea,Ka,temps)
+    withTemp = 1
+    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_results,withTemp,Ea,Ka,temps)
 def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartConfig):
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
@@ -494,23 +530,43 @@ def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartC
     stepNum = int(chartConfig['stepNum'])
     varRange = linspace(varMin, varMax, num=stepNum)
     resultId = (chartConfig['resultId']).split(',')
+    resultName = (chartConfig['resultName']).split(',')
     if not catObj.withTemp:
+        fig, ax = plts.subplots()
+        lines=[]
         for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i]), factors=catObj)
-            plts.subplot(int('%d1%d' % (len(resultId), i + 1)))
-            plts.subplot(int('%d1%d' % (len(resultId), i + 1)))
-            plts.plot(varRange, draw.drawFunc(varRange), linewidth=2)
-            plts.ylabel("%d(%%)" % i)
-        plts.xlabel(varName)
+            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj)
+            line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
+            lines.append(line)
+        leg = ax.legend(loc='upper right', fancybox=True, shadow=True)
+        lined = dict()
+        for legline, origline in zip(leg.get_lines(), lines):
+            legline.set_picker(5)  # 5 pts tolerance
+            lined[legline] = origline
+        ax.set_xlabel(draw.getXLable(varName))
+        ax.set_ylabel('y')
+        draw.lined=lined
+        draw.fig=fig
+        fig.canvas.mpl_connect('pick_event', draw.onpick)
         plts.show()
     else:
+        fig, ax = plts.subplots()
+        lines = []
         for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i]), factors=catObj)
-            plts.subplot(int('%d1%d' % (len(resultId), i + 1)))
-            plts.subplot(int('%d1%d' % (len(resultId), i + 1)))
-            plts.plot(varRange, draw.drawFunc(varRange), linewidth=2)
-            plts.ylabel("%d(%%)" % i)
-        plts.xlabel(varName)
+            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj)
+            line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
+            lines.append(line)
+
+        leg = ax.legend(loc='upper right', fancybox=True, shadow=True)
+        lined = dict()
+        for legline, origline in zip(leg.get_lines(), lines):
+            legline.set_picker(5)  # 5 pts tolerance
+            lined[legline] = origline
+        ax.set_xlabel(draw.getXLable(varName))
+        ax.set_ylabel('y')
+        draw.lined=lined
+        draw.fig=fig
+        fig.canvas.mpl_connect('pick_event', draw.onpick)
         plts.show()
     return 1
 
