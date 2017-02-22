@@ -483,6 +483,7 @@ class Example(Frame):
         self.lastVar = varName
 
     def onNewCata(self):
+        self.catFactors = {}
         ftypes = [('集总模型', '*.lp')]
         dlg = tkFileDialog.Open(self, filetypes=ftypes)
         fl = dlg.show()
@@ -621,14 +622,24 @@ class Example(Frame):
             targetTree.insert('end', '催化剂模型是在同一温度下，只能计算K\n------------------\nK=\n')
             K=numpy.around(self.makeMatrixByResult(catObj.K_model,catObj.X0_result,catObj.n)['K_result'],4)
             self.makeMatrixOutput(n, targetTree, K)
+            targetTree.insert('end', '\n------------------\n重芳烃影响因数：\n')
+            targetTree.insert('end',self.makeMatrixByResult(catObj.K_model,catObj.X0_result,catObj.n)['Ka'] )
+            targetTree.insert('end', '\n------------------\n碱氮影响因数：\n')
+            targetTree.insert('end',self.makeMatrixByResult(catObj.K_model,catObj.X0_result,catObj.n)['Kn'] )
             targetTree.insert('end', '\n------------------\n')
+
         else:
-            K = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['K_result'],4)
+            K = self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['K_result']
+            print catObj.X0_result
             Ka = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.Ka, catObj.n)['K_result'],4)
+            print catObj.Ka
             Ea = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.Ea, catObj.n)['K_result'],4)
+            print catObj.Ea
             targetTree.insert('end', '\n------------------\nK=\n')
-            self.makeMatrixOutput(n, targetTree, K)
-            targetTree.insert('end', '\n------------------\n')
+            print len(K)
+            for i in K:
+                self.makeMatrixOutput(n, targetTree, numpy.round(i,4))
+                targetTree.insert('end', '\n------------------\n')
             targetTree.insert('end', '\n------------------\nKa=\n')
             self.makeMatrixOutput(n, targetTree, Ka)
             targetTree.insert('end', '\n------------------\n')
@@ -641,19 +652,36 @@ class Example(Frame):
             targetTree.insert('end', '\n')
         return targetTree
     def makeMatrixByResult(self, K_model, result, n):
+        if type(result)!=type([]):
+            K = result[:-3].tolist()
+            args = result[-3:]
+            K_raw_result = []
+            for i in K_model.T.flat:
+                if i:
+                    K_raw_result.append(K.pop(0))
+                else:
+                    K_raw_result.append(0)
+            K_result = reshape(K_raw_result, (n, n)).T.T.T
+            ka_result, kn_result, cata_result = args
+            return {'K_result': K_result, 'ka_result': ka_result, 'kn_result': kn_result, 'cata_result': cata_result}
+        else:
+            K_results=[]
 
-        K = result[:-3].tolist()
+            args = result[0][-3:]
+            for i in result:
+                K = i[:-3].tolist()
+                K_raw_result = []
+                for i in K_model.T.flat:
+                    if i:
+                        K_raw_result.append(K.pop(0))
+                    else:
+                        K_raw_result.append(0)
+                K_result = reshape(K_raw_result, (n, n)).T.T.T
+                K_results.append(K_result)
+            ka_result, kn_result, cata_result = args
+            return {'K_result': K_results, 'ka_result': ka_result, 'kn_result': kn_result,
+                        'cata_result': cata_result}
 
-        args = result[-3:]
-        K_raw_result = []
-        for i in K_model.T.flat:
-            if i:
-                K_raw_result.append(K.pop(0))
-            else:
-                K_raw_result.append(0)
-        K_result = reshape(K_raw_result, (n, n)).T.T.T
-        ka_result, kn_result, cata_result = args
-        return {'K_result':K_result,'ka_result':ka_result,'kn_result':kn_result,'cata_result':cata_result}
     def makePreResultUI(self, target, result):
         for i in result:
             target.insert(END, round(i, 3))
