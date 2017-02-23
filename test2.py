@@ -162,7 +162,7 @@ class Tools(object):
                 bounds.append(k_bound)
         self.x0 = x0 + [ka_init, kn_init, const_cata_init]
         self.bounds = bounds + [ka_bound, kn_bound, const_cata_bound]
-    def opt_var_constructor_By_List(self,X_init,max_bounds,min_bounds,kn_bound,ka_bound,const_cata_bound):
+    def opt_var_constructor_By_List(self,X_init,max_bounds,min_bounds):
         # k_bound = [0, 10]
         # kn_bound = [0, 1]
         # ka_bound = [0, 1]
@@ -171,7 +171,8 @@ class Tools(object):
         for i in range(len(max_bounds)):
             bounds.append([min_bounds[i],max_bounds[i]])
         self.x0 = X_init
-        self.bounds = bounds + [ka_bound, kn_bound, const_cata_bound]
+        self.bounds = bounds
+
     def make_result(self, K_model, result, n):
         K = result[:-3].tolist()
         args = result[-3:]
@@ -500,11 +501,14 @@ def loadCat(filename):
     return pickle.load(fileObject)
 
 def getEa(K1,K2,t1,t2,R=8.3145):
-
     Ea = (R*t1*t2/(t1-t2))*log(K1/K2)
-    return [Ea,K1/(math.e**(Ea/(t1*R)))]
+    Ea[-2]=0
+    return [Ea,multiply(K1,(math.e**(Ea/(t1*R))))]
 def getKByT(Ka,Ea,t,R=8.3145):
-    return multiply(Ka,(math.e**(Ea/(t*R))))
+    print -1*Ea/(t*R)
+    print math.e**(-1*Ea/(t*R))
+
+    return multiply(Ka,(math.e**(-1*Ea/(t*R))))
 def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     t = Tools()
@@ -523,6 +527,8 @@ def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, M
     for i in factors:
         if len(temps)==0:
             t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init, [0, 10], [0, 1], [0, 1], [0, 1])
+            t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors[i])
+            X0_result = optimize.minimize(obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
         else:
             temp = factors[i][0]['t']
             maxTIndex = temps.index(max(temps))
@@ -539,7 +545,8 @@ def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, M
                     downTIndex = j
                 elif temp < temps[j] and temps[j] < temps[upTIndex]:
                     upTIndex = j
-            if upTIndex==downTIndex and downTIndex == maxTIndex:
+
+            if upTIndex==downTIndex and downTIndex == maxTIndex and temp>temps[maxTIndex]:
                 X_init = X0_results[maxTIndex]
                 max_bounds = init_bounds[1]
                 min_bounds = X0_results[maxTIndex]
@@ -547,26 +554,24 @@ def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, M
                 ka_bound = [X0_results[maxTIndex][-3],X0_results[maxTIndex][-3]]
                 const_cata_bound = [X0_results[maxTIndex][-1],X0_results[maxTIndex][-1]]
 
-            elif upTIndex==downTIndex and downTIndex == minTIndex:
+            elif upTIndex==downTIndex and downTIndex == minTIndex and temp<temps[minTIndex]:
                 X_init = X0_results[minTIndex]
                 max_bounds = X0_results[minTIndex]
                 min_bounds = init_bounds[0]
-                kn_bound = [X0_results[minTIndex][-2], X0_results[minTIndex][-2]]
-                ka_bound = [X0_results[minTIndex][-3], X0_results[minTIndex][-3]]
-                const_cata_bound = [X0_results[minTIndex][-1], X0_results[minTIndex][-1]]
-            else:#TODO:map it
+
+            else:
                 X_init = (X0_results[minTIndex]+X0_results[maxTIndex])/2
                 max_bounds = X0_results[maxTIndex]
                 min_bounds = X0_results[minTIndex]
-                kn_bound = [X0_results[minTIndex][-2], X0_results[minTIndex][-2]]
-                ka_bound = [X0_results[minTIndex][-3], X0_results[minTIndex][-3]]
-                const_cata_bound = [X0_results[minTIndex][-1], X0_results[minTIndex][-1]]
 
-            t.opt_var_constructor_By_List(X_init,max_bounds,min_bounds,kn_bound,ka_bound,const_cata_bound)
-
-        t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors[i])
-        X0_results.append(optimize.minimize(
-            obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x)
+            print [X_init,max_bounds]
+            t.opt_var_constructor_By_List(X_init,max_bounds,min_bounds)
+            t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors[i])
+            X0_result = optimize.minimize(obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
+            X0_result[-3]=X0_results[0][-3]
+            X0_result[-2] = X0_results[0][-2]
+            X0_result[-1] = X0_results[0][-1]
+        X0_results.append(X0_result)
         temps.append(factors[i][0]['t'])
         print t.make_result(K_init, X0_results[0], 7)
     Ea,Ka=getEa(X0_results[0],X0_results[1],temps[0],temps[1],8.3145)
@@ -579,7 +584,7 @@ def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartC
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
-    catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
+    # catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
     varName = chartConfig['varName']
     varMin = float(chartConfig['varMin'])
     varMax = float(chartConfig['varMax'])
@@ -642,7 +647,8 @@ def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n):
     else:
 
         X0 = getKByT(catObj.Ka,catObj.Ea,t,R=8.3145)
-        X0[-2]=1
+        print X0
+        X0[-2]=0
         print 'pre_result='
         result = lump.result_for_forecast(X0)
         print result
@@ -657,13 +663,13 @@ lumpObj=mat([
         [1, 1, 1, 1, 1, 0, 0]
     ])
 Molmasses=mat([0.8,1.1,1.8,0.2,0.11,0.058,0.012])
-factors ={524.0: [{'p': 175.0, 'w_nitro': 0.0, 't': 524.0, 'r_oil': 8.9, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.04  ,  0.032 ,  0.008 ,  0.151 ,  0.453 ,  0.2429,  0.0731]]), 't_resid': 3.0}], 534.0: [{'p': 175.0, 'w_nitro': 0.0, 't': 534.0, 'r_oil': 8.5, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.0406 ,  0.03248,  0.00812,  0.143  ,  0.4467 ,  0.2557 ,  0.0734 ]]), 't_resid': 3.0}, {'p': 175.0, 'w_nitro': 0.0, 't': 534.0, 'r_oil': 9.2, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.038 ,  0.0304,  0.0076,  0.142 ,  0.4408,  0.2661,  0.0751]]), 't_resid': 3.0}]}
-newCatWithKa('/home/dun/opt/htdocs/lump/3.cat',lumpObj, 1, 0, 1, lumpObj, Molmasses, factors, 'L-BFGS-B', 1e-7,
-                         lumpObj.shape[0])
-# f = open('/home/dun/opt/htdocs/lump/3.cat', "r")
-# aobj = pickle.load(f)
+factors ={797.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 797.15, 'r_oil': 8.9, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.04  ,  0.032 ,  0.008 ,  0.151 ,  0.453 ,  0.2429,  0.0731]]), 't_resid': 3.0}], 807.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 8.5, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.0406 ,  0.03248,  0.00812,  0.143  ,  0.4467 ,  0.2557 ,  0.0734 ]]), 't_resid': 3.0}, {'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 9.2, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.038 ,  0.0304,  0.0076,  0.142 ,  0.4408,  0.2661,  0.0751]]), 't_resid': 3.0}]}
+# newCatWithKa('./4.cat',lumpObj, 1, 0, 1, lumpObj, Molmasses, factors, 'L-BFGS-B', 1e-7,
+#                          lumpObj.shape[0])
+f = open('./4.cat', "r")
+aobj = pickle.load(f)
 
-# newPre(aobj,3,175,mat([0.481,0.472,0.047,0,0,0,0]),8.3145,0.472,0,534,9.2,7)
+newPre(aobj,3,175,mat([0.481,0.472,0.047,0,0,0,0]),8.3145,0.472,0,900,9.2,7)
 def test():
     K_init = mat([
         [0, 0, 0, 0, 0, 0, 0],
