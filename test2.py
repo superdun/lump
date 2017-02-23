@@ -149,21 +149,29 @@ class Tools(object):
     def __init__(self):
         self.bounds = []
 
-    def opt_var_constructor(self, K_init, ka_init, kn_init, const_cata_init):
+    def opt_var_constructor(self, K_init, ka_init, kn_init, const_cata_init,k_bound,kn_bound,ka_bound,const_cata_bound):
         x0 = []
         bounds = []
-        config.read('config.ini')
-        k_bound = [0, 10]
-        kn_bound = [0, 5]
-        ka_bound = [0, 5]
-        const_cata_bound = [0, 5]
+        # k_bound = [0, 10]
+        # kn_bound = [0, 1]
+        # ka_bound = [0, 1]
+        # const_cata_bound = [0, 5]
         for i in K_init.T.flat:
             if i:
                 x0.append(i)
                 bounds.append(k_bound)
         self.x0 = x0 + [ka_init, kn_init, const_cata_init]
         self.bounds = bounds + [ka_bound, kn_bound, const_cata_bound]
-
+    def opt_var_constructor_By_List(self,X_init,max_bounds,min_bounds,kn_bound,ka_bound,const_cata_bound):
+        # k_bound = [0, 10]
+        # kn_bound = [0, 1]
+        # ka_bound = [0, 1]
+        # const_cata_bound = [0, 5]
+        bounds = []
+        for i in range(len(max_bounds)):
+            bounds.append([min_bounds[i],max_bounds[i]])
+        self.x0 = X_init
+        self.bounds = bounds + [ka_bound, kn_bound, const_cata_bound]
     def make_result(self, K_model, result, n):
         K = result[:-3].tolist()
         args = result[-3:]
@@ -492,17 +500,15 @@ def loadCat(filename):
     return pickle.load(fileObject)
 
 def getEa(K1,K2,t1,t2,R=8.3145):
-    print K1
-    print K2
+
     Ea = (R*t1*t2/(t1-t2))*log(K1/K2)
-    print [t1,t2,log(K1/K2)]
     return [Ea,K1/(math.e**(Ea/(t1*R)))]
 def getKByT(Ka,Ea,t,R=8.3145):
     return multiply(Ka,(math.e**(Ea/(t*R))))
 def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     t = Tools()
-    t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
+    t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init,[0,10],[0,1],[0,1],[0,1])
     t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors)
     X0_result = optimize.minimize(
         obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
@@ -513,8 +519,51 @@ def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, M
     X0_results = []
     temps = []
     t=Tools()
+
     for i in factors:
-        t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init)
+        if len(temps)==0:
+            t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init, [0, 10], [0, 1], [0, 1], [0, 1])
+        else:
+            temp = factors[i][0]['t']
+            maxTIndex = temps.index(max(temps))
+            minTIndex = temps.index(min(temps))
+            init_bounds=[[],[]]
+            for k in X0_results[0]:
+                init_bounds[0].append(0)
+                init_bounds[1].append(10)
+
+            upTIndex = 0
+            downTIndex = 0
+            for j in range(len(temps)):
+                if temp >= temps[j] and temps[j] >= temps[downTIndex]:
+                    downTIndex = j
+                elif temp < temps[j] and temps[j] < temps[upTIndex]:
+                    upTIndex = j
+            if upTIndex==downTIndex and downTIndex == maxTIndex:
+                X_init = X0_results[maxTIndex]
+                max_bounds = init_bounds[1]
+                min_bounds = X0_results[maxTIndex]
+                kn_bound = [X0_results[maxTIndex][-2],X0_results[maxTIndex][-2]]
+                ka_bound = [X0_results[maxTIndex][-3],X0_results[maxTIndex][-3]]
+                const_cata_bound = [X0_results[maxTIndex][-1],X0_results[maxTIndex][-1]]
+
+            elif upTIndex==downTIndex and downTIndex == minTIndex:
+                X_init = X0_results[minTIndex]
+                max_bounds = X0_results[minTIndex]
+                min_bounds = init_bounds[0]
+                kn_bound = [X0_results[minTIndex][-2], X0_results[minTIndex][-2]]
+                ka_bound = [X0_results[minTIndex][-3], X0_results[minTIndex][-3]]
+                const_cata_bound = [X0_results[minTIndex][-1], X0_results[minTIndex][-1]]
+            else:#TODO:map it
+                X_init = (X0_results[minTIndex]+X0_results[maxTIndex])/2
+                max_bounds = X0_results[maxTIndex]
+                min_bounds = X0_results[minTIndex]
+                kn_bound = [X0_results[minTIndex][-2], X0_results[minTIndex][-2]]
+                ka_bound = [X0_results[minTIndex][-3], X0_results[minTIndex][-3]]
+                const_cata_bound = [X0_results[minTIndex][-1], X0_results[minTIndex][-1]]
+
+            t.opt_var_constructor_By_List(X_init,max_bounds,min_bounds,kn_bound,ka_bound,const_cata_bound)
+
         t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors[i])
         X0_results.append(optimize.minimize(
             obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x)
