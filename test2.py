@@ -138,11 +138,14 @@ class LumpModel(object):
 
         self.x0 = x0
         rk = RK(self.dydx_for_RK)
-        Y_cal = rk.explicitRK4(0, self.Y0, 0.1, 1)
+        Y_cal = rk.explicitRK4ForLump(0, self.Y0, 0.01, 1)
         return Y_cal
 
-    def result_for_forecast(self, x0):
-        return self.result_for_opt(x0)
+    def result_for_forecast(self, x0,stepLength=0.1):
+        self.x0 = x0
+        rk = RK(self.dydx_for_RK)
+        Y_cal = rk.explicitRK4ForLump(0, self.Y0, stepLength, 1)
+        return Y_cal
 
 
 class Tools(object):
@@ -257,32 +260,33 @@ def obj(x0, args):
 
 
 class drawLine(object):
-    def __init__(self, varName, lump, resultId, factors):
+    def __init__(self, varName, lump, resultId, factors,stepLength):
         self.varName = varName
         self.lump = lump
         self.resultId = resultId
         self.factors = factors
+        self.stepLength=stepLength
 
     def drawFunc(self, x):
         y = []
         for i in x:
             if self.varName == 'p':
                 self.lump.p = i
-                result = self.lump.result_for_forecast(self.factors.X0_result)[0, self.resultId]
+                result = self.lump.result_for_forecast(self.factors.X0_result,self.stepLength)[0, self.resultId]
 
             elif self.varName == 'time':
                 self.lump.t_resid = i
 
-                result = self.lump.result_for_forecast(self.factors.X0_result)[0, self.resultId]
+                result = self.lump.result_for_forecast(self.factors.X0_result,self.stepLength)[0, self.resultId]
 
             elif self.varName == 't':
                 self.lump.t=i
                 X0 = getKByT(self.factors.Ka, self.factors.Ea, i, R=8.3145)
-                result = self.lump.result_for_forecast(X0)[0, self.resultId]
+                result = self.lump.result_for_forecast(X0,self.stepLength)[0, self.resultId]
 
             elif self.varName == 'r':
                 self.lump.r_oil = i
-                result = self.lump.result_for_forecast(self.factors.X0_result)[0, self.resultId]
+                result = self.lump.result_for_forecast(self.factors.X0_result,self.stepLength)[0, self.resultId]
 
             else:
                 print 'error'
@@ -505,9 +509,6 @@ def getEa(K1,K2,t1,t2,R=8.3145):
     Ea[-2]=0
     return [Ea,multiply(K1,(math.e**(Ea/(t1*R))))]
 def getKByT(Ka,Ea,t,R=8.3145):
-    print -1*Ea/(t*R)
-    print math.e**(-1*Ea/(t*R))
-
     return multiply(Ka,(math.e**(-1*Ea/(t*R))))
 def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
@@ -580,7 +581,7 @@ def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, M
 
 
 
-def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartConfig):
+def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartConfig,stepLength):
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
@@ -596,7 +597,7 @@ def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartC
         fig, ax = plts.subplots()
         lines=[]
         for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj)
+            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj,stepLength=stepLength)
             line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
             lines.append(line)
         leg = ax.legend(loc='upper right', fancybox=True, shadow=True)
@@ -614,7 +615,7 @@ def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartC
         fig, ax = plts.subplots()
         lines = []
         for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj)
+            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj,stepLength=stepLength)
             line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
             lines.append(line)
 
@@ -634,14 +635,14 @@ def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartC
 
 
 
-def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n):
+def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,stepLength):
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
     # catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
     if not catObj.withTemp:
         print 'pre_result='
-        result = lump.result_for_forecast(catObj.X0_result)
+        result = lump.result_for_forecast(catObj.X0_result,stepLength)
         print result
         return result
     else:
@@ -650,7 +651,7 @@ def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n):
         print X0
         X0[-2]=0
         print 'pre_result='
-        result = lump.result_for_forecast(X0)
+        result = lump.result_for_forecast(X0,stepLength)
         print result
         return result
 lumpObj=mat([
@@ -666,10 +667,10 @@ Molmasses=mat([0.8,1.1,1.8,0.2,0.11,0.058,0.012])
 factors ={797.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 797.15, 'r_oil': 8.9, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.04  ,  0.032 ,  0.008 ,  0.151 ,  0.453 ,  0.2429,  0.0731]]), 't_resid': 3.0}], 807.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 8.5, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.0406 ,  0.03248,  0.00812,  0.143  ,  0.4467 ,  0.2557 ,  0.0734 ]]), 't_resid': 3.0}, {'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 9.2, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.038 ,  0.0304,  0.0076,  0.142 ,  0.4408,  0.2661,  0.0751]]), 't_resid': 3.0}]}
 # newCatWithKa('./4.cat',lumpObj, 1, 0, 1, lumpObj, Molmasses, factors, 'L-BFGS-B', 1e-7,
 #                          lumpObj.shape[0])
-f = open('./4.cat', "r")
-aobj = pickle.load(f)
-
-newPre(aobj,3,175,mat([0.481,0.472,0.047,0,0,0,0]),8.3145,0.472,0,900,9.2,7)
+# f = open('./4.cat', "r")
+# aobj = pickle.load(f)
+#
+# newPre(aobj,3,175,mat([0.481,0.472,0.047,0,0,0,0]),8.3145,0.472,0,900,9.2,7)
 def test():
     K_init = mat([
         [0, 0, 0, 0, 0, 0, 0],

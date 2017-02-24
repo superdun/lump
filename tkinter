@@ -528,9 +528,10 @@ class Example(Frame):
         w_nitro = float(self.yn_input.get())
         t = float(self.T_input.get())
         r_oil = float(self.roil_input.get())
+        stepLength = float(self.step_input.get())
         n = catObj.n
         print [t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n]
-        result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n).tolist()[0]
+        result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,stepLength).tolist()[0]
         self.makePreResultUI(self.preResult_LB, result)
 
     def doChart(self):
@@ -548,6 +549,7 @@ class Example(Frame):
         resultName= self.chartResultName.get()
         varMin = float(self.rangeMin.get())
         varMax = float(self.rangeMax.get())
+        stepLength = float(self.step_input.get())
         n = catObj.n
         varName = ''
         if self.lastVar == u'温度':
@@ -579,7 +581,7 @@ class Example(Frame):
 
         print chartConfig
         print [catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig]
-        result = newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig)
+        result = newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig,stepLength)
 
     def addFactors(self):
         t_resid = float(self.t_input.get())
@@ -683,6 +685,7 @@ class Example(Frame):
                         'cata_result': cata_result}
 
     def makePreResultUI(self, target, result):
+        target.delete(0, END)
         for i in result:
             target.insert(END, round(i, 3))
         return target

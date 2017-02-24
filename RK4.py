@@ -44,7 +44,6 @@ from numpy import *
 
 
 class RK(object):
-
     def __init__(self, f):
         self.func = f
 
@@ -57,6 +56,7 @@ class RK(object):
         # print (stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6).T
         # print '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
         return y + (stepLength * (K1 + 2 * K2 + 2 * K3 + K4) / 6).T
+
     # 显式龙格库塔，即固定步长
 
     def explicitRK4(self, x0, Y0, stepLength, targetX):
@@ -70,6 +70,25 @@ class RK(object):
         y = self.step(func, x, y, stepLength)
         # print y
         return y
+
+    # 针对集总模型的龙格库塔，如步长过大导致组成<0,步长折半
+
+    def explicitRK4ForLump(self, x0, Y0, stepLength, targetX):
+        x = x0
+        y = Y0
+        func = self.func
+        while x + stepLength < targetX:
+            y_temp = self.step(func, x, y, stepLength)
+            while y_temp[y_temp < 0].shape[1] > 0:
+                stepLength /= 2
+                y_temp = self.step(func, x, y, stepLength)
+            y = y_temp
+            x += stepLength
+        stepLength = targetX - x
+        y = self.step(func, x, y, stepLength)
+        # print y
+        return y
+
     # 可变步长，隐式
 
     def implicitRK4(self, x0, Y0, stepLength, targetX, accuracy):
@@ -88,7 +107,7 @@ class RK(object):
                 if abs(y1 - y2) > accuracy:
                     while abs(y1 - y2) > accuracy:
                         i += 1
-                        para = 2**i
+                        para = 2 ** i
                         y2 = self.explicitRK4(
                             x, [y], stepLength / (2 * para), x + stepLength / para)[0]
                         y1 = self.step(func, x, y, stepLength / para)
@@ -97,7 +116,7 @@ class RK(object):
                 elif abs(y1 - y2) < accuracy:
                     while abs(y1 - y2) < accuracy:
                         i -= 1
-                        para = 2**i
+                        para = 2 ** i
                         y2 = self.explicitRK4(
                             x, [y], stepLength / (2 * para), x + stepLength / para)[0]
                         y1 = self.step(func, x, y, stepLength / para)
