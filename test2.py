@@ -234,7 +234,7 @@ def obj(x0, args):
 
     # factors = [
     #     {'t_resid': 3, 'p': 175, 'Y0': mat(
-    #         [0.481,0.472,0.047,0,0,0,0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 7.92},
+        #         [0.481,0.472,0.047,0,0,0,0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 7.92},
     #     {'t_resid': 3, 'p': 175, 'Y0': mat(
     #         [0.481,0.472,0.047,0,0,0,0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 8.6}]
     # Y_results = [mat([0.01852,0.0463,0.02788,0.1471,0.4468,0.252,0.0615]),
@@ -252,10 +252,11 @@ def obj(x0, args):
         factor = factors[i]
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=factor['t_resid'], p=factor['p'], Y0=factor[
             'Y0'], const_r=8.3145, w_aro=factor['w_aro'], w_nitro=factor['w_nitro'], t=factor['t'],
-                         r_oil=factor['r_oil'], n=7)
+                         r_oil=factor['r_oil'], n=K_model.shape[0])
         deviation = lump.result_for_opt(x0) - Y_results[i]
         sqa_deviation = (deviation * (deviation).T)[0, 0]
         sum += sqa_deviation
+    print sum
     return sum
 
 
@@ -574,7 +575,8 @@ def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, M
             X0_result[-1] = X0_results[0][-1]
         X0_results.append(X0_result)
         temps.append(factors[i][0]['t'])
-        print t.make_result(K_init, X0_results[0], 7)
+        print X0_results[0]
+        # print t.make_result(K_init, X0_results[0], 12)
     Ea,Ka=getEa(X0_results[0],X0_results[1],temps[0],temps[1],8.3145)
     withTemp = 1
     saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_results,withTemp,Ea,Ka,temps)

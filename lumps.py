@@ -279,7 +279,7 @@ def obj(x0,Molmasses,K_model,factors,Y_results):
         factor = factors[i]
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=factor['t_resid'], p=factor['p'], Y0=factor[
             'Y0'], const_r=8.3145, w_aro=factor['w_aro'], w_nitro=factor['w_nitro'], t=factor['t'],
-                         r_oil=factor['r_oil'], n=7)
+                         r_oil=factor['r_oil'], n=K_model.shape[0])
         deviation = lump.result_for_opt(x0) - Y_results[i]
         sqa_deviation = (deviation * (deviation).T)[0, 0]
         sum += sqa_deviation
