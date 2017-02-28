@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-
-
 from Tkinter import Frame, Tk, BOTH, Menu, RAISED, Label, W, N, E, S, Button, Entry, Listbox, END, DISABLED, VERTICAL, \
     Message, \
     StringVar, Text

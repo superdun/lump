@@ -270,29 +270,57 @@ class drawLine(object):
 
     def drawFunc(self, x):
         y = []
-        for i in x:
-            if self.varName == 'p':
-                self.lump.p = i
-                result = self.lump.result_for_forecast(self.factors.X0_result,self.stepLength)[0, self.resultId]
+        a= self.factors
+        if self.factors.withTemp:
+            for i in x:
+                if self.varName == 'p':
+                    self.lump.p = i
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    result = self.lump.result_for_forecast(X0, self.stepLength)[0, self.resultId]
 
-            elif self.varName == 'time':
-                self.lump.t_resid = i
+                elif self.varName == 'time':
+                    self.lump.t_resid = i
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    result = self.lump.result_for_forecast(X0, self.stepLength)[0, self.resultId]
 
-                result = self.lump.result_for_forecast(self.factors.X0_result,self.stepLength)[0, self.resultId]
+                elif self.varName == 't':
+                    self.lump.t = i
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, i, R=8.3145)
+                    result = self.lump.result_for_forecast(X0, self.stepLength)[0, self.resultId]
 
-            elif self.varName == 't':
-                self.lump.t=i
-                X0 = getKByT(self.factors.Ka, self.factors.Ea, i, R=8.3145)
-                result = self.lump.result_for_forecast(X0,self.stepLength)[0, self.resultId]
+                elif self.varName == 'r':
+                    self.lump.r_oil = i
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    result = self.lump.result_for_forecast(X0, self.stepLength)[0, self.resultId]
 
-            elif self.varName == 'r':
-                self.lump.r_oil = i
-                result = self.lump.result_for_forecast(self.factors.X0_result,self.stepLength)[0, self.resultId]
+                else:
+                    print 'error'
+                    result = 0
+                y.append(result)
+        else:
+            for i in x:
+                if self.varName == 'p':
+                    self.lump.p = i
+                    result = self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, self.resultId]
 
-            else:
-                print 'error'
-                result = 0
-            y.append(result)
+                elif self.varName == 'time':
+                    self.lump.t_resid = i
+
+                    result = self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, self.resultId]
+
+                elif self.varName == 't':
+                    self.lump.t = i
+                    result = self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, self.resultId]
+
+                elif self.varName == 'r':
+                    self.lump.r_oil = i
+                    result = self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, self.resultId]
+
+                else:
+                    print 'error'
+                    result = 0
+                y.append(result)
+
         print y
         return array(y)
     def getXLable(self, varName):
