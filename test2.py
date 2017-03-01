@@ -640,6 +640,7 @@ def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartC
         draw.lined=lined
         draw.fig=fig
         fig.canvas.mpl_connect('pick_event', draw.onpick)
+        plts.tick_params(axis='both', which='major', labelsize=20)
         plts.show()
     else:
         fig, ax = plts.subplots()
@@ -654,11 +655,12 @@ def newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartC
         for legline, origline in zip(leg.get_lines(), lines):
             legline.set_picker(5)  # 5 pts tolerance
             lined[legline] = origline
-        ax.set_xlabel(draw.getXLable(varName))
-        ax.set_ylabel('y')
+        ax.set_xlabel(draw.getXLable(varName), fontsize=20)
+        ax.set_ylabel('y', fontsize=20)
         draw.lined=lined
         draw.fig=fig
         fig.canvas.mpl_connect('pick_event', draw.onpick)
+        plts.tick_params(axis='both', which='major', labelsize=20)
         plts.show()
     return 1
 
