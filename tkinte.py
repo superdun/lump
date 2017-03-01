@@ -109,7 +109,7 @@ class Example(Frame):
         # K_Mat_Tree = self.makeMatrixUI(7, K_Mat_Tree, sourceDate.K_model)
         # K_Mat_Tree.grid(row=1, column=0, columnspan=6, rowspan=5, sticky=E + W + S + N, pady=4, padx=5)
         K_Mat_Tree = Text(frame1, height=18)
-        self.makeMatrixUI( K_Mat_Tree, self.catObj)
+        self.makeMatrixUI(K_Mat_Tree, self.catObj)
         K_Mat_Tree.configure(state='normal')
         K_Mat_Tree.grid(row=1, column=0, columnspan=6, rowspan=6, sticky=E + W + S + N, pady=4, padx=5)
 
@@ -149,7 +149,7 @@ class Example(Frame):
         lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.T_input = Entry(frame2)
         if not self.catObj.withTemp:
-            self.T_input.insert(0,self.catObj.t)
+            self.T_input.insert(0, self.catObj.t)
             self.T_input.configure(state='readonly')
         self.T_input.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
@@ -400,7 +400,7 @@ class Example(Frame):
         lbl.grid(row=1, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.var = ttk.Combobox(frame2, textvariable=StringVar())
         if not self.catObj.withTemp:
-            self.var['values'] = ( u'压力', u'剂油比', u'停留时间')
+            self.var['values'] = (u'压力', u'剂油比', u'停留时间')
             self.p_input.insert(0, 0)
             self.T_input.insert(0, self.catObj.t)
             self.T_input.configure(state='readonly')
@@ -410,14 +410,14 @@ class Example(Frame):
             self.T_input.delete(0, 'end')
             self.T_input.insert(0, 0)
             self.T_input.configure(state='readonly')
-            self.var['values'] = (u'温度', u'压力', u'剂油比', u'停留时间')
+            self.var['values'] = (u'温度', u'压力', u'剂油比', u'停留时间', u'温度+压力+剂油比')
             self.lastVar = u'温度'
         self.var.bind('<<ComboboxSelected>>', self.onSelecetedVar)
         self.var.current(0)
         self.var.grid(row=1, column=8, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
-        lbl = Label(frame2, text="条件范围")
-        lbl.grid(row=2, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.rangeLbl = Label(frame2, text="条件范围")
+        self.rangeLbl.grid(row=2, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         lbl = Label(frame2, text="上限")
         lbl.grid(row=3, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         lbl = Label(frame2, text="下限")
@@ -445,29 +445,11 @@ class Example(Frame):
         self.stepNum = Entry(frame2)
         self.stepNum.grid(row=7, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
-
         cateDetailButton = Button(frame2, text="预测趋势", command=self.doChart)
         cateDetailButton.grid(row=8, column=6, columnspan=2)
 
     def onSelecetedVar(self, event):
         varName = self.var.get()
-        if varName == u'温度':
-            self.T_input.delete(0, 'end')
-            self.T_input.insert(0, 0)
-            self.T_input.configure(state="readonly")
-        elif varName == u'压力':
-            self.p_input.delete(0, 'end')
-            self.p_input.insert(0, 0)
-            self.p_input.configure(state="readonly")
-        elif varName == u'剂油比':
-            self.roil_input.delete(0, 'end')
-            self.roil_input.insert(0, 0)
-            self.roil_input.configure(state="readonly")
-        elif varName == u'停留时间':
-            self.t_input.delete(0, 'end')
-            self.t_input.insert(0, 0)
-            self.t_input.configure(state="readonly")
-
         if self.lastVar == u'温度':
             # u'温度',,,u'停留时间'
             self.T_input.configure(state="normal")
@@ -477,6 +459,48 @@ class Example(Frame):
             self.roil_input.configure(state="normal")
         elif self.lastVar == u'停留时间':
             self.t_input.configure(state="normal")
+        elif self.lastVar == u'温度+压力+剂油比':
+            self.roil_input.configure(state="normal")
+            self.T_input.configure(state="normal")
+            self.p_input.configure(state="normal")
+
+        if varName == u'温度':
+            self.rangeLbl.config(text='条件范围')
+
+            self.T_input.delete(0, 'end')
+            self.T_input.insert(0, 0)
+            self.T_input.configure(state="readonly")
+        elif varName == u'压力':
+            self.rangeLbl.config(text='条件范围')
+
+            self.p_input.delete(0, 'end')
+            self.p_input.insert(0, 0)
+            self.p_input.configure(state="readonly")
+        elif varName == u'剂油比':
+            self.rangeLbl.config(text='条件范围')
+
+            self.roil_input.delete(0, 'end')
+            self.roil_input.insert(0, 0)
+            self.roil_input.configure(state="readonly")
+        elif varName == u'停留时间':
+            self.rangeLbl.config(text='条件范围')
+
+            self.t_input.delete(0, 'end')
+            self.t_input.insert(0, 0)
+            self.t_input.configure(state="readonly")
+        elif varName == u'温度+压力+剂油比':
+            self.rangeLbl.config(text='条件范围,格式：温度，压力，剂油比')
+            self.roil_input.delete(0, 'end')
+            self.roil_input.insert(0, 0)
+            self.roil_input.configure(state="readonly")
+            self.T_input.delete(0, 'end')
+            self.T_input.insert(0, 0)
+            self.T_input.configure(state="readonly")
+            self.p_input.delete(0, 'end')
+            self.p_input.insert(0, 0)
+            self.p_input.configure(state="readonly")
+
+
 
         self.lastVar = varName
 
@@ -508,9 +532,10 @@ class Example(Frame):
         if fl != '':
             self.catObj = self.readFile(fl)
             self.graphUI()
+
     def saveCate(self):
         ftypes = [('催化剂存档文件', '*.cat')]
-        filename = tkFileDialog.asksaveasfilename(title='保存催化剂存档文件', defaultextension='.cat',filetypes=ftypes)
+        filename = tkFileDialog.asksaveasfilename(title='保存催化剂存档文件', defaultextension='.cat', filetypes=ftypes)
         return filename
 
     def onHelp(self):
@@ -529,7 +554,7 @@ class Example(Frame):
         stepLength = float(self.step_input.get())
         n = catObj.n
         print [t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n]
-        result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,stepLength).tolist()[0]
+        result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, stepLength).tolist()[0]
         self.makePreResultUI(self.preResult_LB, result)
 
     def doChart(self):
@@ -544,20 +569,31 @@ class Example(Frame):
         r_oil = float(self.roil_input.get())
         stepNum = int(self.stepNum.get())
         resultId = self.chartResultId.get()
-        resultName= self.chartResultName.get()
-        varMin = float(self.rangeMin.get())
-        varMax = float(self.rangeMax.get())
+        resultName = self.chartResultName.get()
+
         stepLength = float(self.step_input.get())
         n = catObj.n
         varName = ''
         if self.lastVar == u'温度':
             varName = 't'
+            varMin = float(self.rangeMin.get())
+            varMax = float(self.rangeMax.get())
         elif self.lastVar == u'压力':
             varName = 'p'
+            varMin = float(self.rangeMin.get())
+            varMax = float(self.rangeMax.get())
         elif self.lastVar == u'剂油比':
             varName = 'r'
+            varMin = float(self.rangeMin.get())
+            varMax = float(self.rangeMax.get())
         elif self.lastVar == u'停留时间':
             varName = 'time'
+            varMin = float(self.rangeMin.get())
+            varMax = float(self.rangeMax.get())
+        elif self.lastVar == u'温度+压力+剂油比':
+            varName = 't,p,r'
+            varMin = self.rangeMin.get().split(',')
+            varMax = self.rangeMax.get().split(',')
         chartConfig = {}
         chartConfig['varName'] = varName
         chartConfig['stepNum'] = stepNum
@@ -579,7 +615,11 @@ class Example(Frame):
 
         print chartConfig
         print [catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig]
-        result = newChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig,stepLength)
+        if self.lastVar == u'温度+压力+剂油比':
+            result = new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig, stepLength)
+
+        else:
+            result = new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig, stepLength)
 
     def addFactors(self):
         t_resid = float(self.t_input.get())
@@ -611,34 +651,37 @@ class Example(Frame):
         filename = self.saveCate()
         print filename
         if len(self.catFactors) == 1:
-            newCatNoKa(filename,self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors.values()[0], 'L-BFGS-B',
+            newCatNoKa(filename, self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors.values()[0],
+                       'L-BFGS-B',
                        1e-7, self.lumpObj.shape[0])
         else:
-            newCatWithKa(filename,self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors, 'L-BFGS-B', 1e-7,
+            newCatWithKa(filename, self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors, 'L-BFGS-B',
+                         1e-7,
                          self.lumpObj.shape[0])
-    def makeMatrixUI(self,targetTree, catObj):
-        n=catObj.n
+
+    def makeMatrixUI(self, targetTree, catObj):
+        n = catObj.n
         if not catObj.withTemp:
             targetTree.insert('end', '催化剂模型是在同一温度下，只能计算K\n------------------\nK=\n')
-            K=numpy.around(self.makeMatrixByResult(catObj.K_model,catObj.X0_result,catObj.n)['K_result'],4)
+            K = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['K_result'], 4)
             self.makeMatrixOutput(n, targetTree, K)
             targetTree.insert('end', '\n------------------\n重芳烃影响因数：\n')
-            targetTree.insert('end',self.makeMatrixByResult(catObj.K_model,catObj.X0_result,catObj.n)['Ka'] )
+            targetTree.insert('end', self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['Ka'])
             targetTree.insert('end', '\n------------------\n碱氮影响因数：\n')
-            targetTree.insert('end',self.makeMatrixByResult(catObj.K_model,catObj.X0_result,catObj.n)['Kn'] )
+            targetTree.insert('end', self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['Kn'])
             targetTree.insert('end', '\n------------------\n')
 
         else:
             K = self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['K_result']
             print catObj.X0_result
-            Ka = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.Ka, catObj.n)['K_result'],4)
+            Ka = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.Ka, catObj.n)['K_result'], 4)
             print catObj.Ka
-            Ea = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.Ea, catObj.n)['K_result'],4)
+            Ea = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.Ea, catObj.n)['K_result'], 4)
             print catObj.Ea
             targetTree.insert('end', '\n------------------\nK=\n')
             print len(K)
             for i in K:
-                self.makeMatrixOutput(n, targetTree, numpy.round(i,4))
+                self.makeMatrixOutput(n, targetTree, numpy.round(i, 4))
                 targetTree.insert('end', '\n------------------\n')
             targetTree.insert('end', '\n------------------\nKa=\n')
             self.makeMatrixOutput(n, targetTree, Ka)
@@ -646,13 +689,15 @@ class Example(Frame):
             targetTree.insert('end', '\n------------------\nEa=\n')
             self.makeMatrixOutput(n, targetTree, Ea)
             targetTree.insert('end', '\n------------------\n')
+
     def makeMatrixOutput(self, n, targetTree, mat):
         for i in range(n):
             targetTree.insert('end', ','.join(mat[i].astype(numpy.string_).tolist()))
             targetTree.insert('end', '\n')
         return targetTree
+
     def makeMatrixByResult(self, K_model, result, n):
-        if type(result)!=type([]):
+        if type(result) != type([]):
             K = result[:-3].tolist()
             args = result[-3:]
             K_raw_result = []
@@ -665,7 +710,7 @@ class Example(Frame):
             ka_result, kn_result, cata_result = args
             return {'K_result': K_result, 'ka_result': ka_result, 'kn_result': kn_result, 'cata_result': cata_result}
         else:
-            K_results=[]
+            K_results = []
 
             args = result[0][-3:]
             for i in result:
@@ -680,7 +725,7 @@ class Example(Frame):
                 K_results.append(K_result)
             ka_result, kn_result, cata_result = args
             return {'K_result': K_results, 'ka_result': ka_result, 'kn_result': kn_result,
-                        'cata_result': cata_result}
+                    'cata_result': cata_result}
 
     def makePreResultUI(self, target, result):
         target.delete(0, END)
