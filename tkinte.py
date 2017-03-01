@@ -410,7 +410,7 @@ class Example(Frame):
             self.T_input.delete(0, 'end')
             self.T_input.insert(0, 0)
             self.T_input.configure(state='readonly')
-            self.var['values'] = (u'温度', u'压力', u'剂油比', u'停留时间', u'温度+压力+剂油比')
+            self.var['values'] = (u'温度', u'压力', u'剂油比', u'停留时间', u'温度+压力',u'温度+剂油比',u'剂油比+压力')
             self.lastVar = u'温度'
         self.var.bind('<<ComboboxSelected>>', self.onSelecetedVar)
         self.var.current(0)
@@ -459,9 +459,14 @@ class Example(Frame):
             self.roil_input.configure(state="normal")
         elif self.lastVar == u'停留时间':
             self.t_input.configure(state="normal")
-        elif self.lastVar == u'温度+压力+剂油比':
+        elif self.lastVar == u'温度+压力':
+            self.T_input.configure(state="normal")
+            self.p_input.configure(state="normal")
+        elif self.lastVar == u'温度+剂油比':
             self.roil_input.configure(state="normal")
             self.T_input.configure(state="normal")
+        elif self.lastVar == u'剂油比+压力':
+            self.roil_input.configure(state="normal")
             self.p_input.configure(state="normal")
 
         if varName == u'温度':
@@ -488,19 +493,33 @@ class Example(Frame):
             self.t_input.delete(0, 'end')
             self.t_input.insert(0, 0)
             self.t_input.configure(state="readonly")
-        elif varName == u'温度+压力+剂油比':
-            self.rangeLbl.config(text='条件范围,格式：温度，压力，剂油比')
-            self.roil_input.delete(0, 'end')
-            self.roil_input.insert(0, 0)
-            self.roil_input.configure(state="readonly")
+        elif varName == u'温度+压力':
+            self.rangeLbl.config(text='条件范围,格式：温度，压力')
+
             self.T_input.delete(0, 'end')
             self.T_input.insert(0, 0)
             self.T_input.configure(state="readonly")
             self.p_input.delete(0, 'end')
             self.p_input.insert(0, 0)
             self.p_input.configure(state="readonly")
+        elif varName == u'温度+剂油比':
+            self.rangeLbl.config(text='条件范围,格式：温度，剂油比')
+            self.roil_input.delete(0, 'end')
+            self.roil_input.insert(0, 0)
+            self.roil_input.configure(state="readonly")
+            self.T_input.delete(0, 'end')
+            self.T_input.insert(0, 0)
+            self.T_input.configure(state="readonly")
 
+        elif varName == u'剂油比+压力':
+            self.rangeLbl.config(text='条件范围,格式：剂油比，压力')
+            self.roil_input.delete(0, 'end')
+            self.roil_input.insert(0, 0)
+            self.roil_input.configure(state="readonly")
 
+            self.p_input.delete(0, 'end')
+            self.p_input.insert(0, 0)
+            self.p_input.configure(state="readonly")
 
         self.lastVar = varName
 
@@ -590,8 +609,16 @@ class Example(Frame):
             varName = 'time'
             varMin = float(self.rangeMin.get())
             varMax = float(self.rangeMax.get())
-        elif self.lastVar == u'温度+压力+剂油比':
-            varName = 't,p,r'
+        elif self.lastVar == u'温度+压力':
+            varName = 't,p'.split(',')
+            varMin = self.rangeMin.get().split(',')
+            varMax = self.rangeMax.get().split(',')
+        elif self.lastVar == u'温度+剂油比':
+            varName = 't,r'.split(',')
+            varMin = self.rangeMin.get().split(',')
+            varMax = self.rangeMax.get().split(',')
+        elif self.lastVar == u'剂油比+压力':
+            varName = 'r,p'.split(',')
             varMin = self.rangeMin.get().split(',')
             varMax = self.rangeMax.get().split(',')
         chartConfig = {}
@@ -615,7 +642,7 @@ class Example(Frame):
 
         print chartConfig
         print [catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig]
-        if self.lastVar == u'温度+压力+剂油比':
+        if len(varName)>1:
             result = new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig, stepLength)
 
         else:

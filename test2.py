@@ -18,7 +18,7 @@ import pickle
 from numpy import *
 from scipy import optimize
 from RK4 import RK
-
+from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 from matplotlib.ticker import LinearLocator, FormatStrFormatter
 import matplotlib.pyplot as plts
@@ -106,14 +106,14 @@ class LumpModel(object):
             const_cataDeact, x) * self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
 
         return self.Dydx
-    # def func_dydx_simple(self,K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact, x):
-    #     self.Dydx = K * self.Y.T * (1 / (1 + k_aroAdsorbDeact * self.w_aro)) * \
-    #                 (1 / (1 + k_nitroAdsorbDeact * self.w_nitro / self.r_oil)) *\
-    #                 (math.e ** (-1 * const_cataDeact * self.t_resid * x)) * \
-    #                 ((1 / (asmatrix(self.Y0) * (1 / self.Molmasses.T)))[0, 0]) * \
-    #                 self.p / (self.const_r * self.t * (1 / (self.r_oil * self.t_resid)))
-    #
-    #     return self.Dydx
+    def func_dydx_simple(self,K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact, x):
+        self.Dydx = K * self.Y.T * (1 / (1 + k_aroAdsorbDeact * self.w_aro)) * \
+                    (1 / (1 + k_nitroAdsorbDeact * self.w_nitro / self.r_oil)) *\
+                    (math.e ** (-1 * const_cataDeact * self.t_resid * x)) * \
+                    ((1 / (asmatrix(self.Y0) * (1 / self.Molmasses.T)))[0, 0]) * \
+                    self.p / (self.const_r * self.t * (1 / (self.r_oil * self.t_resid)))
+
+        return self.Dydx
     def dydx_for_RK(self, x, Y):
         """
         dydx_for_RK 为func_dydx的封装，以便使用龙哥库塔法计算
@@ -333,24 +333,49 @@ class drawLine(object):
         print y
         return array(y)
 
-    def draw3DFunc(self, T,P):
-        y = []
-        X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
-        self.lump.p = p
-        self.lump.t = t
-        result = self.lump.result_for_forecast(X0, self.stepLength)[0, self.resultId]
-        print y
-        return array(y)
+    def draw3DFunc(self, X,Y):
+        result = ones(X.shape)
+
+
+        if self.varName == ['t', 'p']:
+            for x, y in ndindex(result.shape):
+                self.lump.t = X[x, y]
+                self.lump.p = Y[x, y]
+                X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                sum=0
+                for i in self.resultId:
+                    sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                result[x, y] =sum
+        elif self.varName == ['t', 'r']:
+            for x, y in ndindex(result.shape):
+                self.lump.t = X[x, y]
+                self.lump.r_oil = Y[x, y]
+                X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                sum=0
+                for i in self.resultId:
+                    sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                result[x, y] = sum
+        elif self.varName == ['r', 'p']:
+            for x, y in ndindex(result.shape):
+                self.lump.r_oil = X[x, y]
+                self.lump.p = Y[x, y]
+                X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                sum=0
+                for i in self.resultId:
+                    sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                result[x, y] = sum
+        print result
+        return result
     def getXLable(self, varName):
         if varName == 'p':
             return 'pressure (kPa)'
 
         elif varName == 'time':
             return ' residence time (s)'
-        elif self.varName == 't':
+        elif varName == 't':
             return 'temperature (K)'
 
-        elif self.varName == 'r':
+        elif varName == 'r':
 
             return 'solvent to oil ratio'
         else:
@@ -633,51 +658,35 @@ def new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
     set_printoptions(precision=4, suppress=False)
     # catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
     varName = chartConfig['varName']
-    varMin = float(chartConfig['varMin'])
-    varMax = float(chartConfig['varMax'])
+    varMin = chartConfig['varMin']
+    varMax = chartConfig['varMax']
     stepNum = int(chartConfig['stepNum'])
-    varRange = linspace(varMin, varMax, num=stepNum)
-    resultId = (chartConfig['resultId']).split(',')
-    resultName = (chartConfig['resultName']).split(',')
-    if not catObj.withTemp:
-        fig, ax = plts.subplots()
-        lines=[]
-        for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj,stepLength=stepLength)
-            line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
-            lines.append(line)
-        leg = ax.legend(loc='upper right', fancybox=True, shadow=True)
-        lined = dict()
-        for legline, origline in zip(leg.get_lines(), lines):
-            legline.set_picker(5)  # 5 pts tolerance
-            lined[legline] = origline
-        ax.set_xlabel(draw.getXLable(varName))
-        ax.set_ylabel('y')
-        draw.lined=lined
-        draw.fig=fig
-        fig.canvas.mpl_connect('pick_event', draw.onpick)
-        plts.tick_params(axis='both', which='major', labelsize=20)
-        plts.show()
-    else:
-        fig, ax = plts.subplots()
-        lines = []
-        for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj,stepLength=stepLength)
-            line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
-            lines.append(line)
+    varRange = [linspace(float(varMin[0]),float(varMax[0]) , num=stepNum),linspace(float(varMin[1]),float(varMax[1]), num=stepNum)]
+    resultId = chartConfig['resultId']
+    resultName = chartConfig['resultName']
+    #TODO:nowithTemp
+    X,Y=meshgrid(varRange[0],varRange[1])
+    resultIds = []
+    for i in resultId.split(','):
+        resultIds.append(int(i)-1)
+    draw = drawLine(varName=varName, lump=lump, resultId=resultIds, factors=catObj,
+                    stepLength=stepLength)
 
-        leg = ax.legend(loc='upper right', fancybox=True, shadow=True)
-        lined = dict()
-        for legline, origline in zip(leg.get_lines(), lines):
-            legline.set_picker(5)  # 5 pts tolerance
-            lined[legline] = origline
-        ax.set_xlabel(draw.getXLable(varName), fontsize=20)
-        ax.set_ylabel('y', fontsize=20)
-        draw.lined=lined
-        draw.fig=fig
-        fig.canvas.mpl_connect('pick_event', draw.onpick)
-        plts.tick_params(axis='both', which='major', labelsize=20)
-        plts.show()
+    Z =draw.draw3DFunc(X,Y)
+    fig = plts.figure()
+    ax = fig.gca(projection='3d')
+    surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm,
+                           linewidth=0, antialiased=False)
+
+    ax.set_xlabel(draw.getXLable(varName[0]),fontsize=20)
+    ax.set_ylabel(draw.getXLable(varName[1]),fontsize=20)
+    ax.set_zlabel('y',fontsize=20)
+    ax.zaxis.set_major_locator(LinearLocator(10))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
+    plts.tick_params(which='major', labelsize=15)
+    fig.colorbar(surf, shrink=0.5, aspect=5)
+
+    plts.show()
     return 1
 
 
