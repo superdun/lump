@@ -215,6 +215,22 @@ class Tools(object):
             Y_results.append(i['Y_results'])
         self.Y_results = Y_results
 
+def objForBest(x0,args):
+    sum=0
+    lump = args['lump']
+    targets = args['targets']
+    Ka = args['Ka']
+    Ea = args['Ea']
+    stepLength = args['stepLength']
+    lump.t,lump.p,lump.r_oil,lump.t_resid=x0
+    X0 = getKByT(Ka, Ea, lump.t, R=8.3145)
+    Y_result = lump.result_for_forecast(X0, stepLength)
+    for i in targets:
+        i=int(i)-1
+        sum+=Y_result[0,i]
+    print sum
+    return -sum
+
 
 def obj(x0, args):
     sum = 0
@@ -582,6 +598,31 @@ def getEa(K1,K2,t1,t2,R=8.3145):
     return [Ea,multiply(K1,(math.e**(Ea/(t1*R))))]
 def getKByT(Ka,Ea,t,R=8.3145):
     return multiply(Ka,(math.e**(-1*Ea/(t*R))))
+def newBest(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,stepLength,target):
+    result={}
+    lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
+                     const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
+    set_printoptions(precision=4, suppress=False)
+    # catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
+    #TODO:noWithTemp
+    args = {'lump':lump,'targets':target,'Ka':catObj.Ka,'Ea':catObj.Ea,'stepLength':stepLength}
+    bounds = array([t,p,r_oil,t_resid])
+    if not catObj.withTemp:
+        pass
+    else:
+        X0_result = optimize.minimize(
+            objForBest, x0=array([(t[0]+t[1])/2,(p[0]+p[1])/2,(r_oil[0]+r_oil[1])/2,(t_resid[0]+t_resid[1])/2]), args=(args,), bounds=bounds, method=catObj.optMethod, tol=catObj.tol).x
+        lump.t, lump.p, lump.r_oil,lump.t_resid =X0_result
+        X0=getKByT(catObj.Ka, catObj.Ea, lump.t, R=8.3145)
+        Y_result = lump.result_for_forecast(X0,stepLength)[0]
+        sum=0
+        for i in target:
+            i = int(i) - 1
+            sum += Y_result[0, i]
+        result={'bestT':lump.t,'bestP':lump.p,'bestR':lump.r_oil,'bestTime':lump.t_resid,'sum':sum,'Y':Y_result[0]}
+
+    return result
+
 def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
            n):
     t = Tools()

@@ -170,7 +170,7 @@ class Example(Frame):
         self.roil_input = Entry(frame2)
         self.roil_input.grid(row=4, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
-        lbl = Label(frame2, text="停留时间（s）")
+        lbl = Label(frame2, text="停留时间范围（英文逗号分割s）")
         lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.t_input = Entry(frame2)
         self.t_input.grid(row=5, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
@@ -199,11 +199,15 @@ class Example(Frame):
         self.target.grid(row=9, column=2, columnspan=3, rowspan=1, sticky=E, pady=4, padx=5)
 
         self.preResult_LB = Listbox(frame2)
-        self.preResult_LB.grid(row=1, column=7, columnspan=2, rowspan=6, pady=4, padx=5)
+        self.preResult_LB.grid(row=1, column=7, columnspan=2, rowspan=6, pady=4, padx=5, sticky=W)
 
+        lbl = Label(frame2, text="最优条件：")
+        lbl.grid(row=8, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.bestResult = Entry(frame2)
+        self.bestResult.grid(row=8, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
-        cateDetailButton = Button(frame2, text="预测", command=self.doPre)
-        cateDetailButton.grid(row=8, column=7, columnspan=2)
+        cateDetailButton = Button(frame2, text="预测", command=self.doBest)
+        cateDetailButton.grid(row=9, column=6, columnspan=2)
 
     def preUI(self):
         self.frame0.destroy()
@@ -705,7 +709,7 @@ class Example(Frame):
         self.makePreResultUI(self.preResult_LB, result)
     def doBest(self):
         catObj = self.catObj
-        t_resid = float(self.t_input.get())
+        t_resid = [float(self.t_input.get().split(',')[0]),float(self.t_input.get().split(',')[1])]
         p = [float(self.p_input.get().split(',')[0]),float(self.p_input.get().split(',')[1])]
         Y0 = numpy.mat(self.Y0_input.get().split(',')).astype(numpy.float)
         const_r = 8.3145
@@ -823,10 +827,10 @@ class Example(Frame):
         if len(self.catFactors) == 1:
             newCatNoKa(filename, self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors.values()[0],
                        'L-BFGS-B',
-                       1e-7, self.lumpObj.shape[0])
+                       1e-5, self.lumpObj.shape[0])
         else:
             newCatWithKa(filename, self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors, 'L-BFGS-B',
-                         1e-7,
+                         1e-5,
                          self.lumpObj.shape[0])
 
     def makeMatrixUI(self, targetTree, catObj):
