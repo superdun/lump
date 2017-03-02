@@ -51,11 +51,12 @@ class Example(Frame):
         menubar.add_cascade(label="帮助", menu=helpMenu)
 
     def initUIFrame(self):
-        self.frame0.columnconfigure(0, pad=5)
+        self.frame0.columnconfigure(0, pad=5, weight=1)
         self.frame0.columnconfigure(1, pad=5, weight=1)
-        self.frame0.columnconfigure(2, pad=5)
+        self.frame0.columnconfigure(2, pad=5, weight=1)
         self.frame0.columnconfigure(3, pad=5, weight=1)
-        self.frame0.columnconfigure(4, pad=5)
+        self.frame0.columnconfigure(4, pad=5, weight=1)
+        self.frame0.columnconfigure(5, pad=5, weight=1)
         self.frame0.rowconfigure(0, pad=7)
         self.frame0.rowconfigure(1, pad=7, weight=1)
         self.frame0.rowconfigure(2, pad=7, weight=1)
@@ -63,6 +64,7 @@ class Example(Frame):
         catImg = ImageTk.PhotoImage(file="./imgs/cat.png")
         preImg = ImageTk.PhotoImage(file="./imgs/pre.png")
         chartImg = ImageTk.PhotoImage(file="./imgs/chart.png")
+        bestImg = ImageTk.PhotoImage(file="./imgs/bestPoint.png")
 
         preButton = Button(self.frame0, command=self.onNewPre)
         preButton.config(image=preImg)
@@ -76,6 +78,10 @@ class Example(Frame):
         chartButton.config(image=chartImg)
         chartButton.image = chartImg
         chartButton.grid(row=1, column=3, sticky=S)
+        chartButton = Button(self.frame0, command=self.onNewBest)
+        chartButton.config(image=bestImg)
+        chartButton.image = bestImg
+        chartButton.grid(row=1, column=4, sticky=S)
 
         lbl = Label(self.frame0, text="新建催化剂")
         lbl.grid(row=2, column=1, sticky=N)
@@ -83,6 +89,121 @@ class Example(Frame):
         lbl.grid(row=2, column=2, sticky=N)
         lbl = Label(self.frame0, text="趋势预测")
         lbl.grid(row=2, column=3, sticky=N)
+        lbl = Label(self.frame0, text="最优条件预测")
+        lbl.grid(row=2, column=4, sticky=N)
+    def bestUI(self):
+        self.frame0.destroy()
+        self.initUIRoot()
+        frame1 = Frame(self.frame0, relief=RAISED, borderwidth=1)
+        frame1.pack(fill=BOTH, expand=False)
+
+        frame2 = Frame(self.frame0, relief=RAISED, borderwidth=1)
+        frame2.pack(fill=BOTH, expand=True)
+
+        frame1.columnconfigure(1, weight=1)
+        # frame1.columnconfigure(9, weight=1)
+        frame1.columnconfigure(10, pad=7)
+        frame1.rowconfigure(5, weight=1)
+        frame1.rowconfigure(5, pad=7)
+
+        frame2.columnconfigure(8, pad=7, weight=1)
+        frame2.rowconfigure(8, pad=7)
+
+        lbl = Label(frame1, text="催化剂性质")
+        lbl.grid(row=0, column=0, columnspan=8, rowspan=1, sticky=W, pady=4, padx=5)
+        # K_Mat_Tree = ttk.Treeview(frame1)
+        # K_Mat_Tree['show'] = 'headings'
+        # K_Mat_Tree = self.makeMatrixUI(7, K_Mat_Tree, sourceDate.K_model)
+        # K_Mat_Tree.grid(row=1, column=0, columnspan=6, rowspan=5, sticky=E + W + S + N, pady=4, padx=5)
+        K_Mat_Tree = Text(frame1, height=18)
+        self.makeMatrixUI(K_Mat_Tree, self.catObj)
+        K_Mat_Tree.configure(state='normal')
+        K_Mat_Tree.grid(row=1, column=0, columnspan=6, rowspan=6, sticky=E + W + S + N, pady=4, padx=5)
+
+        lbl = Label(frame1, text="优化方法:")
+        lbl.grid(row=0, column=6, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+        txt = Entry(frame1)
+        txt.insert(0, self.catObj.optMethod)
+        txt.configure(state='readonly')
+        txt.grid(row=0, column=8, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+
+        lbl = Label(frame1, text="集总数:")
+        lbl.grid(row=1, column=6, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+        txt = Entry(frame1)
+        txt.insert(0, self.catObj.n)
+        txt.configure(state='readonly')
+        txt.grid(row=1, column=8, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+
+        lbl = Label(frame1, text="精确度:")
+        lbl.grid(row=2, column=6, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+        txt = Entry(frame1)
+        txt.insert(0, self.catObj.tol)
+        txt.configure(state='readonly')
+        txt.grid(row=2, column=8, columnspan=2, rowspan=1, sticky=E + W + S + N, pady=4, padx=5)
+
+        cateDetailButton = Button(frame1, text="查看催化剂详情")
+        cateDetailButton.grid(row=3, column=8)
+        # ________________________________________
+        lbl = Label(frame2, text="待预测条件")
+        lbl.grid(row=0, column=0, sticky=W, columnspan=5, rowspan=1, pady=4, padx=5)
+
+        lbl = Label(frame2, text="初始组成（<1 英文逗号分割）:")
+        lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.Y0_input = Entry(frame2)
+        self.Y0_input.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="温度范围（K 英文逗号分割 ）")
+        lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.T_input = Entry(frame2)
+        if not self.catObj.withTemp:
+            self.T_input.insert(0, self.catObj.t)
+            self.T_input.configure(state='readonly')
+        self.T_input.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="压力范围（KPa 英文逗号分割）")
+        lbl.grid(row=3, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.p_input = Entry(frame2)
+        self.p_input.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="剂油比范围 （英文逗号分割）")
+        lbl.grid(row=4, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.roil_input = Entry(frame2)
+        self.roil_input.grid(row=4, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="停留时间（s）")
+        lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.t_input = Entry(frame2)
+        self.t_input.grid(row=5, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="碱氮含量（<1）")
+        lbl.grid(row=6, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.yn_input = Entry(frame2)
+        self.yn_input.insert(0, 0.0)
+        self.yn_input.grid(row=6, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="重芳烃含量（<1）")
+        lbl.grid(row=7, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.ya_input = Entry(frame2)
+        self.ya_input.grid(row=7, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="微分方程步长")
+        lbl.grid(row=8, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.step_input = Entry(frame2)
+        self.step_input.insert(0, 0.1)
+        self.step_input.grid(row=8, column=2, columnspan=3, rowspan=1, sticky=E, pady=4, padx=5)
+
+        lbl = Label(frame2, text="待预测组分编号（，）")
+        lbl.grid(row=9, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.target = Entry(frame2)
+        self.target.insert(0, '5,6,7')
+        self.target.grid(row=9, column=2, columnspan=3, rowspan=1, sticky=E, pady=4, padx=5)
+
+        self.preResult_LB = Listbox(frame2)
+        self.preResult_LB.grid(row=1, column=7, columnspan=2, rowspan=6, pady=4, padx=5)
+
+
+        cateDetailButton = Button(frame2, text="预测", command=self.doPre)
+        cateDetailButton.grid(row=8, column=7, columnspan=2)
 
     def preUI(self):
         self.frame0.destroy()
@@ -542,7 +663,14 @@ class Example(Frame):
         if fl != '':
             self.catObj = self.readFile(fl)
             self.preUI()
-
+    def onNewBest(self):
+        ftypes = [('催化剂存档文件', '*.cat')]
+        dlg = tkFileDialog.Open(self, filetypes=ftypes)
+        fl = dlg.show()
+        print fl
+        if fl != '':
+            self.catObj = self.readFile(fl)
+            self.bestUI()
     def onNewGraph(self):
         ftypes = [('催化剂存档文件', '*.cat')]
         dlg = tkFileDialog.Open(self, filetypes=ftypes)
@@ -575,7 +703,22 @@ class Example(Frame):
         print [t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n]
         result = newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, stepLength).tolist()[0]
         self.makePreResultUI(self.preResult_LB, result)
-
+    def doBest(self):
+        catObj = self.catObj
+        t_resid = float(self.t_input.get())
+        p = [float(self.p_input.get().split(',')[0]),float(self.p_input.get().split(',')[1])]
+        Y0 = numpy.mat(self.Y0_input.get().split(',')).astype(numpy.float)
+        const_r = 8.3145
+        w_aro = float(self.ya_input.get())
+        w_nitro = float(self.yn_input.get())
+        t = [float(self.T_input.get().split(',')[0]),float(self.T_input.get().split(',')[1])]
+        r_oil = [float(self.roil_input.get().split(',')[0]),float(self.roil_input.get().split(',')[1])]
+        stepLength = float(self.step_input.get())
+        n = catObj.n
+        target = self.target.get().split(',')
+        print [t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,target]
+        result = newBest(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, stepLength,target)
+        # self.makePreResultUI(self.preResult_LB, result)
     def doChart(self):
         catObj = self.catObj
         t_resid = float(self.t_input.get())
