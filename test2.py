@@ -384,16 +384,16 @@ class drawLine(object):
         return result
     def getXLable(self, varName):
         if varName == 'p':
-            return 'pressure (kPa)'
+            return 'p (kPa)'
 
         elif varName == 'time':
-            return ' residence time (s)'
+            return ' Reaction Time (s)'
         elif varName == 't':
-            return 'temperature (K)'
+            return 'T (K)'
 
         elif varName == 'r':
 
-            return 'solvent to oil ratio'
+            return 'C/O'
         else:
             return 'error!'
 
@@ -719,12 +719,12 @@ def new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
     surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm,
                            linewidth=0, antialiased=False)
 
-    ax.set_xlabel(draw.getXLable(varName[0]),fontsize=20)
-    ax.set_ylabel(draw.getXLable(varName[1]),fontsize=20)
-    ax.set_zlabel('y',fontsize=20)
+    ax.set_xlabel(draw.getXLable(varName[0]),fontsize=10)
+    ax.set_ylabel(draw.getXLable(varName[1]),fontsize=10)
+    ax.set_zlabel('y',fontsize=10)
     ax.zaxis.set_major_locator(LinearLocator(10))
     ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
-    plts.tick_params(which='major', labelsize=15)
+    plts.tick_params(which='major', labelsize=10)
     fig.colorbar(surf, shrink=0.5, aspect=5)
 
     plts.show()
