@@ -41,6 +41,7 @@ class Example(Frame):
         fileMenu.add_command(label=u"新建催化剂", command=self.onNewCata)
         fileMenu.add_command(label=u"精确预测", command=self.onNewPre)
         fileMenu.add_command(label=u"趋势预测", command=self.onNewGraph)
+        fileMenu.add_command(label=u"最优条件预测", command=self.onNewBest)
         helpMenu = Menu(menubar)
         helpMenu.add_command(label=u"关于", command=self.onHelp)
 
@@ -106,7 +107,7 @@ class Example(Frame):
         frame1.rowconfigure(5, weight=1)
         frame1.rowconfigure(5, pad=7)
 
-        frame2.columnconfigure(8, pad=7, weight=1)
+        frame2.columnconfigure(11, pad=7, weight=1)
         frame2.rowconfigure(8, pad=7)
 
         lbl = Label(frame1, text="催化剂性质")
@@ -198,14 +199,41 @@ class Example(Frame):
         self.target.insert(0, '5,6,7')
         self.target.grid(row=9, column=2, columnspan=3, rowspan=1, sticky=E, pady=4, padx=5)
 
+        lbl = Label(frame2, text="结果组成")
+        lbl.grid(row=0, column=7, columnspan=2, rowspan=1, pady=4, padx=5, sticky=W)
         self.preResult_LB = Listbox(frame2)
-        self.preResult_LB.grid(row=1, column=7, columnspan=2, rowspan=6, pady=4, padx=5, sticky=W)
+        self.preResult_LB.grid(row=1, column=7, columnspan=2, rowspan=8, pady=4, padx=5, sticky=W)
 
-        lbl = Label(frame2, text="最优条件：")
-        lbl.grid(row=8, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.bestResult = Entry(frame2)
-        self.bestResult.grid(row=8, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
-
+        lbl = Label(frame2, text="最优温度：")
+        lbl.grid(row=0, column=9, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.bestT = Entry(frame2)
+        self.bestT.delete(0, 'end')
+        self.bestT.configure(state='readonly')
+        self.bestT.grid(row=0, column=11, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
+        lbl = Label(frame2, text="最优压力：")
+        lbl.grid(row=1, column=9, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.bestP = Entry(frame2)
+        self.bestP.delete(0, 'end')
+        self.bestP.configure(state='readonly')
+        self.bestP.grid(row=1, column=11, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
+        lbl = Label(frame2, text="最优剂油比：")
+        lbl.grid(row=2, column=9, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.bestR = Entry(frame2)
+        self.bestR.delete(0, 'end')
+        self.bestR.configure(state='readonly')
+        self.bestR.grid(row=2, column=11, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
+        lbl = Label(frame2, text="最优反应时间：")
+        lbl.grid(row=3, column=9, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.bestTime = Entry(frame2)
+        self.bestTime.delete(0, 'end')
+        self.bestTime.configure(state='readonly')
+        self.bestTime.grid(row=3, column=11, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
+        lbl = Label(frame2, text="目标结果：")
+        lbl.grid(row=4, column=9, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.bestSum = Entry(frame2)
+        self.bestSum.delete(0, 'end')
+        self.bestSum.configure(state='readonly')
+        self.bestSum.grid(row=4, column=11, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
         cateDetailButton = Button(frame2, text="预测", command=self.doBest)
         cateDetailButton.grid(row=9, column=6, columnspan=2)
 
@@ -542,7 +570,7 @@ class Example(Frame):
         self.var.grid(row=1, column=8, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         self.rangeLbl = Label(frame2, text="条件范围")
-        self.rangeLbl.grid(row=2, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.rangeLbl.grid(row=2, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         lbl = Label(frame2, text="上限")
         lbl.grid(row=3, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         lbl = Label(frame2, text="下限")
@@ -562,6 +590,7 @@ class Example(Frame):
         lbl = Label(frame2, text="结果名（英文逗号分割\n尽量使用英文）")
         lbl.grid(row=6, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.chartResultName = Entry(frame2)
+        #TODO,get the default value from lump model
         self.chartResultName.insert(0, 'Hs,Ha,Hr,diesel,gasoline,gas,coke')
         self.chartResultName.grid(row=6, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
@@ -722,7 +751,17 @@ class Example(Frame):
         target = self.target.get().split(',')
         print [t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,target]
         result = newBest(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, stepLength,target)
-        # self.makePreResultUI(self.preResult_LB, result)
+        self.bestP.configure(state='normal')
+        self.bestT.configure(state='normal')
+        self.bestR.configure(state='normal')
+        self.bestTime.configure(state='normal')
+        self.bestSum.configure(state='normal')
+        self.bestP.insert('end',round(result['bestP'], 4))
+        self.bestT.insert('end',round(result['bestT'], 4))
+        self.bestR.insert('end',round(result['bestR'], 4))
+        self.bestTime.insert('end',round(result['bestTime'], 4))
+        self.bestSum.insert('end',round(result['sum'], 4))
+        self.makePreResultUI(self.preResult_LB, result['Y'])
     def doChart(self):
         catObj = self.catObj
         t_resid = float(self.t_input.get())
@@ -903,6 +942,8 @@ class Example(Frame):
 
     def makePreResultUI(self, target, result):
         target.delete(0, END)
+        if type(result)!=type([]):
+            result=result.tolist()[0]
         for i in result:
             target.insert(END, round(i, 3))
         return target
@@ -917,6 +958,7 @@ def main():
     root = Tk()
     ex = Example(root)
     root.geometry("800x640+300+300")
+    root.iconbitmap('./imgs/logo.ico')
     root.mainloop()
 
 
