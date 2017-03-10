@@ -69,7 +69,7 @@ class Example(Frame):
         rareImg = ImageTk.PhotoImage(file="./imgs/rare.png")
 
         lbl = Label(self.frame0, image=titleImg)
-        lbl.grid(row=0, column=1,columnspan=5,sticky=S)
+        lbl.grid(row=0, column=1,columnspan=5,sticky=S+W)
         lbl.image = titleImg
         lbl = Label(self.frame0, image=rareImg)
         lbl.grid(row=3, column=1,columnspan=5,sticky=S)
@@ -357,11 +357,11 @@ class Example(Frame):
         frame4.pack(fill=BOTH)
 
         frame1 = Frame(self.frame0, relief=RAISED, borderwidth=1)
-        frame1.pack()
+        frame1.pack(fill=BOTH, expand=True)
 
         frame1.columnconfigure(0, weight=1)
         # frame1.columnconfigure(9, weight=1)
-        frame1.rowconfigure(0, weight=0)
+        frame1.rowconfigure(0, weight=1)
 
         lbl = Label(frame4, text="已输入温度组数")
         lbl.grid(row=0, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
@@ -393,79 +393,63 @@ class Example(Frame):
         factor_Tree.column("t_resid", width=self.winfo_width() / 8)
         factor_Tree.grid(row=0, column=0, pady=4, padx=5)
         self.factor_Tree = factor_Tree
-
         frame2 = Frame(self.frame0, relief=RAISED, borderwidth=1)
         frame2.pack(fill=BOTH, expand=True)
 
-
-        frame2.columnconfigure(13)
+        frame2.columnconfigure(0, weight=1)
+        frame2.columnconfigure(8, weight=1)
 
         lbl = Label(frame2, text="停留时间（s）")
         lbl.grid(row=0, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.t_input = Entry(frame2,width=5)
-        self.t_input.grid(row=0, column=2, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
+        self.t_input = Entry(frame2)
+        self.t_input.grid(row=0, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="温度（K）")
         lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.T_input = Entry(frame2,width=5)
-        self.T_input.grid(row=1, column=2, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
+        self.T_input = Entry(frame2)
+        self.T_input.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="剂油比")
         lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.roil_input = Entry(frame2,width=5)
-        self.roil_input.grid(row=2, column=2, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
+        self.roil_input = Entry(frame2)
+        self.roil_input.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="压力（KPa）")
         lbl.grid(row=3, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.p_input = Entry(frame2,width=5)
-        self.p_input.grid(row=3, column=2, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
+        self.p_input = Entry(frame2)
+        self.p_input.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
+        lbl = Label(frame2, text="初始组成（<1 英文逗号分割）:")
+        lbl.grid(row=0, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.Y0_input = Entry(frame2)
+        self.Y0_input.grid(row=0, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+
+        lbl = Label(frame2, text="产物组成（<1 英文逗号分割）:")
+        lbl.grid(row=1, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.Y_results_input = Entry(frame2)
+        self.Y_results_input.grid(row=1, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="碱氮含量（<1）")
-        lbl.grid(row=4, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.yn_input = Entry(frame2,width=5)
+        lbl.grid(row=2, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.yn_input = Entry(frame2)
         self.yn_input.insert(0, 0.0)
-        self.yn_input.grid(row=4, column=2, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
+        self.yn_input.grid(row=2, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="重芳烃含量（<1）")
-        lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.ya_input = Entry(frame2,width=5)
-        self.ya_input.grid(row=5, column=2, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl.grid(row=3, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.ya_input = Entry(frame2)
+        self.ya_input.grid(row=3, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
-
-        # lbl = Label(frame2, text="初始组成（<1 英文逗号分割）:")
-        # lbl.grid(row=0, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
-        # self.Y0_input = Entry(frame2)
-        # self.Y0_input.grid(row=0, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
-
-        lbl = Label(frame2, text="初始组成")
-        lbl.grid(row=0, column=4, columnspan=1, rowspan=1, sticky=W, pady=4, padx=5)
-        self.Y0_input=self.makeFactorUI(frame2,1,1,4,['HS','HA','HR','DIESEL','GS','GO','GA','DGAS','LO3','LO4','LPGD','COKE'])
-
-
-        # lbl = Label(frame2, text="产物组成（<1 英文逗号分割）:")
-        # lbl.grid(row=1, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
-        # self.Y_results_input = Entry(frame2)
-        # self.Y_results_input.grid(row=1, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
-
-        lbl = Label(frame2, text="产物组成")
-        lbl.grid(row=0, column=6, columnspan=1, rowspan=1, sticky=W, pady=4, padx=5)
-        self.Y_results_input=self.makeFactorUI(frame2,0,1,6,['HS','HA','HR','DIESEL','GS','GO','GA','DGAS','LO3','LO4','LPGD','COKE'])
-
-        # lbl = Label(frame2, text="分子质量（逗号分割）")
-        # lbl.grid(row=4, column=4, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        # self.Molmasses_input = Entry(frame2)
-        # self.Molmasses_input.grid(row=4, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-
-        lbl = Label(frame2, text="分子质量")
-        lbl.grid(row=0, column=7, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
-        self.Molmasses_input=self.makeFactorUI(frame2,0,1,7,['HS','HA','HR','DIESEL','GS','GO','GA','DGAS','LO3','LO4','LPGD','COKE'])
-
+        lbl = Label(frame2, text="分子质量（逗号分割）")
+        lbl.grid(row=4, column=4, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.Molmasses_input = Entry(frame2)
+        self.Molmasses_input.grid(row=4, column=6, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.Molmasses_input.insert(0,'0.8,1.1,1.8,0.2,0.2,0.2,0.11,0.016,0.042,0.056,0.05,0.012')
         addButton = Button(frame2, command=self.addFactors, text="添加条件")
-        addButton.grid(row=9, column=1, sticky=E)
+        addButton.grid(row=9, column=2, sticky=E)
 
         self.newCatButton = Button(frame2, command=self.newCata, text="开始计算", state=DISABLED)
-        self.newCatButton.grid(row=8, column=1, sticky=E)
+        self.newCatButton.grid(row=9, column=6, sticky=E)
 
     def graphUI(self):
         self.frame0.destroy()
@@ -607,14 +591,14 @@ class Example(Frame):
         lbl = Label(frame2, text="结果集（英文逗号分割）")
         lbl.grid(row=5, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.chartResultId = Entry(frame2)
-        self.chartResultId.insert(0, '1,2,3,4,5,6,7')
+        self.chartResultId.insert(0, '1,2,3,4,5,6,7,8,9,10,11,12')
         self.chartResultId.grid(row=5, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="结果名（英文逗号分割\n尽量使用英文）")
         lbl.grid(row=6, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.chartResultName = Entry(frame2)
         #TODO,get the default value from lump model
-        self.chartResultName.insert(0, 'Hs,Ha,Hr,diesel,gasoline,gas,coke')
+        self.chartResultName.insert(0, 'HS,HA,HR,DIESEL,GS,GO,GA,DGAS,LO3,LO4,LPGD,COKE')
         self.chartResultName.grid(row=6, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="点数")
@@ -708,7 +692,6 @@ class Example(Frame):
         # print flmakePreResultUI
         if fl != '':
             self.lumpObj = self.readFile(fl)
-            # self.lumpNames = self.readFile(fl).lumpNames
             print self.lumpObj
             self.cateUI()
 
@@ -976,27 +959,6 @@ class Example(Frame):
         f = open(filename, "r")
         obj = pickle.load(f)
         return obj
-    def makeFactorUI(self,target,hasLabel,row,col,names):
-        result={}
-        if hasLabel:
-            for i in range(len(names)):
-                lbl = Label(target, text=names[i])
-                lbl.grid(row=row+i, column=col, columnspan=1, rowspan=1, sticky=W, pady=0, padx=5)
-                ent = Entry(target,width=5)
-                ent.grid(row=row+i, column=col+1, columnspan=1, rowspan=1, sticky=W, pady=0, padx=5)
-                result[names[i]]=ent
-        else:
-            for i in range(len(names)):
-                ent = Entry(target,width=5)
-                ent.grid(row=row+i, column=col, columnspan=1, rowspan=1, sticky=W, pady=0, padx=5)
-                result[names[i]]=ent
-        return result
-    def getResultFromDict(self,targeDict):
-        result = []
-        for i in targeDict:
-            result.append(i.get())
-        return ','.join(result)
-
 
 
 def main():

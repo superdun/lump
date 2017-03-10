@@ -449,7 +449,7 @@ def run():
         filename = raw_input('file name>>>>')
         if filename == '':
             X0_result = optimize.minimize(
-                obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method='L-BFGS-B', tol=1e-7).x
+                obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method='L-BFGS-B', tol=1e-5).x
             print X0_result
         else:
             X0_result = array(open('%s.txt' % filename, 'r+').read().split(',')).astype(float)
@@ -517,7 +517,7 @@ def run2():
         filename = raw_input('file name>>>>')
         if filename == '':
             X0_result = optimize.minimize(
-                obj, x0=array(t.x0), bounds=t.bounds, method='L-BFGS-B', tol=1e-7).x
+                obj, x0=array(t.x0), bounds=t.bounds, method='L-BFGS-B', tol=1e-5).x
             print X0_result
         else:
             X0_result = array(open('%s.txt' % filename, 'r+').read().split(',')).astype(float)
@@ -817,7 +817,7 @@ lumpObj=mat([
     ])
 Molmasses=mat([0.8,1.1,1.8,0.2,0.11,0.058,0.012])
 factors ={797.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 797.15, 'r_oil': 8.9, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.04  ,  0.032 ,  0.008 ,  0.151 ,  0.453 ,  0.2429,  0.0731]]), 't_resid': 3.0}], 807.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 8.5, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.0406 ,  0.03248,  0.00812,  0.143  ,  0.4467 ,  0.2557 ,  0.0734 ]]), 't_resid': 3.0}, {'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 9.2, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.038 ,  0.0304,  0.0076,  0.142 ,  0.4408,  0.2661,  0.0751]]), 't_resid': 3.0}]}
-# newCatWithKa('./4.cat',lumpObj, 1, 0, 1, lumpObj, Molmasses, factors, 'L-BFGS-B', 1e-7,
+# newCatWithKa('./4.cat',lumpObj, 1, 0, 1, lumpObj, Molmasses, factors, 'L-BFGS-B', 1e-5,
 #                          lumpObj.shape[0])
 # f = open('./4.cat', "r")
 # aobj = pickle.load(f)
@@ -855,7 +855,7 @@ def test():
     const_cata_init = 1
     n = 7
     optMethod = 'L-BFGS-B'
-    tol = 1e-7
+    tol = 1e-5
     newCat('1', K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, Y_results, optMethod, tol, n)
 
 
