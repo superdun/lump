@@ -103,17 +103,20 @@ class LumpModel(object):
         # print '!!!!!!!!!!!'
         self.Dydx = K * self.Y.T * self.__func_aro(k_aroAdsorbDeact) * self.__func_nitro(
             k_nitroAdsorbDeact) * self.__func_coke(
-            const_cataDeact, x) * self.__func_molmass() * self.p / (self.const_r * self.t * self.__func_airspeed())
+            const_cataDeact, x) * self.__func_molmass() * (self.p + 100) / (
+                    self.const_r * self.t * self.__func_airspeed())
 
         return self.Dydx
-    def func_dydx_simple(self,K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact, x):
+
+    def func_dydx_simple(self, K, k_aroAdsorbDeact, k_nitroAdsorbDeact, const_cataDeact, x):
         self.Dydx = K * self.Y.T * (1 / (1 + k_aroAdsorbDeact * self.w_aro)) * \
-                    (1 / (1 + k_nitroAdsorbDeact * self.w_nitro / self.r_oil)) *\
+                    (1 / (1 + k_nitroAdsorbDeact * self.w_nitro / self.r_oil)) * \
                     (math.e ** (-1 * const_cataDeact * self.t_resid * x)) * \
                     ((1 / (asmatrix(self.Y0) * (1 / self.Molmasses.T)))[0, 0]) * \
                     self.p / (self.const_r * self.t * (1 / (self.r_oil * self.t_resid)))
 
         return self.Dydx
+
     def dydx_for_RK(self, x, Y):
         """
         dydx_for_RK 为func_dydx的封装，以便使用龙哥库塔法计算
@@ -150,7 +153,7 @@ class LumpModel(object):
         Y_cal = rk.explicitRK4ForLump(0, self.Y0, 0.01, 1)
         return Y_cal
 
-    def result_for_forecast(self, x0,stepLength=0.1):
+    def result_for_forecast(self, x0, stepLength=0.1):
         self.x0 = x0
         rk = RK(self.dydx_for_RK)
         Y_cal = rk.explicitRK4ForLump(0, self.Y0, stepLength, 1)
@@ -161,7 +164,8 @@ class Tools(object):
     def __init__(self):
         self.bounds = []
 
-    def opt_var_constructor(self, K_init, ka_init, kn_init, const_cata_init,k_bound,kn_bound,ka_bound,const_cata_bound):
+    def opt_var_constructor(self, K_init, ka_init, kn_init, const_cata_init, k_bound, kn_bound, ka_bound,
+                            const_cata_bound):
         x0 = []
         bounds = []
         # k_bound = [0, 10]
@@ -174,14 +178,15 @@ class Tools(object):
                 bounds.append(k_bound)
         self.x0 = x0 + [ka_init, kn_init, const_cata_init]
         self.bounds = bounds + [ka_bound, kn_bound, const_cata_bound]
-    def opt_var_constructor_By_List(self,X_init,max_bounds,min_bounds):
+
+    def opt_var_constructor_By_List(self, X_init, max_bounds, min_bounds):
         # k_bound = [0, 10]
         # kn_bound = [0, 1]
         # ka_bound = [0, 1]
         # const_cata_bound = [0, 5]
         bounds = []
         for i in range(len(max_bounds)):
-            bounds.append([min_bounds[i],max_bounds[i]])
+            bounds.append([min_bounds[i], max_bounds[i]])
         self.x0 = X_init
         self.bounds = bounds
 
@@ -204,7 +209,8 @@ class Tools(object):
         print kn_result
         print 'cata='
         print cata_result
-        return {'K_result':K_result,'ka_result':ka_result,'kn_result':kn_result,'cata_result':cata_result}
+        return {'K_result': K_result, 'ka_result': ka_result, 'kn_result': kn_result, 'cata_result': cata_result}
+
     def obj_para_constructor(self, Molmasses, K_model, factors):
         self.Molmasses = Molmasses
         self.K_model = K_model
@@ -215,19 +221,23 @@ class Tools(object):
             Y_results.append(i['Y_results'])
         self.Y_results = Y_results
 
-def objForBest(x0,args):
-    sum=0
+
+def objForBest(x0, args):
+    sum = 0
     lump = args['lump']
     targets = args['targets']
     Ka = args['Ka']
     Ea = args['Ea']
     stepLength = args['stepLength']
-    lump.t,lump.p,lump.r_oil,lump.t_resid=x0
-    X0 = getKByT(Ka, Ea, lump.t, R=8.3145)
+    lump.t, lump.p, lump.r_oil, lump.t_resid = x0
+    if args['withTemp']:
+        X0 = getKByT(Ka, Ea, lump.t, R=8.3145)
+    else:
+        X0 = args['X0']
     Y_result = lump.result_for_forecast(X0, stepLength)
     for i in targets:
-        i=int(i)-1
-        sum+=Y_result[0,i]
+        i = int(i) - 1
+        sum += Y_result[0, i]
     print sum
     return -sum
 
@@ -259,7 +269,7 @@ def obj(x0, args):
 
     # factors = [
     #     {'t_resid': 3, 'p': 175, 'Y0': mat(
-        #         [0.481,0.472,0.047,0,0,0,0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 7.92},
+    #         [0.481,0.472,0.047,0,0,0,0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 7.92},
     #     {'t_resid': 3, 'p': 175, 'Y0': mat(
     #         [0.481,0.472,0.047,0,0,0,0]), 'w_aro': 0.472, 'w_nitro': 0, 't': 685, 'r_oil': 8.6}]
     # Y_results = [mat([0.01852,0.0463,0.02788,0.1471,0.4468,0.252,0.0615]),
@@ -286,16 +296,16 @@ def obj(x0, args):
 
 
 class drawLine(object):
-    def __init__(self, varName, lump, resultId, factors,stepLength):
+    def __init__(self, varName, lump, resultId, factors, stepLength):
         self.varName = varName
         self.lump = lump
         self.resultId = resultId
         self.factors = factors
-        self.stepLength=stepLength
+        self.stepLength = stepLength
 
     def drawFunc(self, x):
         y = []
-        a= self.factors
+        a = self.factors
         if self.factors.withTemp:
             for i in x:
                 if self.varName == 'p':
@@ -347,41 +357,120 @@ class drawLine(object):
                 y.append(result)
 
         print y
-        return array(y)
+        return array(y) * 100
 
-    def draw3DFunc(self, X,Y):
+    def draw3DFunc(self, X, Y):
         result = ones(X.shape)
+        if self.factors.withTemp:
+            if self.varName == ['t', 'p']:
+                for x, y in ndindex(result.shape):
+                    self.lump.t = X[x, y]
+                    self.lump.p = Y[x, y]
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['t', 'r']:
+                for x, y in ndindex(result.shape):
+                    self.lump.t = X[x, y]
+                    self.lump.r_oil = Y[x, y]
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['r', 'p']:
+                for x, y in ndindex(result.shape):
+                    self.lump.r_oil = X[x, y]
+                    self.lump.p = Y[x, y]
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                    result[x, y] = sum
 
+            elif self.varName == ['r', 'time']:
+                for x, y in ndindex(result.shape):
+                    self.lump.r_oil = X[x, y]
+                    self.lump.t_resid = Y[x, y]
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['t', 'time']:
+                for x, y in ndindex(result.shape):
+                    self.lump.t = X[x, y]
+                    self.lump.t_resid = Y[x, y]
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['p', 'time']:
+                for x, y in ndindex(result.shape):
+                    self.lump.p = X[x, y]
+                    self.lump.t_resid = Y[x, y]
+                    X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
+                    result[x, y] = sum
+        else:
+            if self.varName == ['t', 'p']:
+                for x, y in ndindex(result.shape):
+                    self.lump.t = X[x, y]
+                    self.lump.p = Y[x, y]
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['t', 'r']:
+                for x, y in ndindex(result.shape):
+                    self.lump.t = X[x, y]
+                    self.lump.r_oil = Y[x, y]
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['r', 'p']:
+                for x, y in ndindex(result.shape):
+                    self.lump.r_oil = X[x, y]
+                    self.lump.p = Y[x, y]
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, i]
+                    result[x, y] = sum
 
-        if self.varName == ['t', 'p']:
-            for x, y in ndindex(result.shape):
-                self.lump.t = X[x, y]
-                self.lump.p = Y[x, y]
-                X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
-                sum=0
-                for i in self.resultId:
-                    sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
-                result[x, y] =sum
-        elif self.varName == ['t', 'r']:
-            for x, y in ndindex(result.shape):
-                self.lump.t = X[x, y]
-                self.lump.r_oil = Y[x, y]
-                X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
-                sum=0
-                for i in self.resultId:
-                    sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
-                result[x, y] = sum
-        elif self.varName == ['r', 'p']:
-            for x, y in ndindex(result.shape):
-                self.lump.r_oil = X[x, y]
-                self.lump.p = Y[x, y]
-                X0 = getKByT(self.factors.Ka, self.factors.Ea, self.lump.t, R=8.3145)
-                sum=0
-                for i in self.resultId:
-                    sum += self.lump.result_for_forecast(X0, self.stepLength)[0, i]
-                result[x, y] = sum
+            elif self.varName == ['r', 'time']:
+                for x, y in ndindex(result.shape):
+                    self.lump.r_oil = X[x, y]
+                    self.lump.t_resid = Y[x, y]
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['t', 'time']:
+                for x, y in ndindex(result.shape):
+                    self.lump.t = X[x, y]
+                    self.lump.t_resid = Y[x, y]
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, i]
+                    result[x, y] = sum
+            elif self.varName == ['p', 'time']:
+                for x, y in ndindex(result.shape):
+                    self.lump.p = X[x, y]
+                    self.lump.t_resid = Y[x, y]
+                    sum = 0
+                    for i in self.resultId:
+                        sum += self.lump.result_for_forecast(self.factors.X0_result, self.stepLength)[0, i]
+                    result[x, y] = sum
+
         print result
-        return result
+        return result * 100
+
     def getXLable(self, varName):
         if varName == 'p':
             return 'p (kPa)'
@@ -397,7 +486,7 @@ class drawLine(object):
         else:
             return 'error!'
 
-    def onpick(self,event):
+    def onpick(self, event):
         # on the pick event, find the orig line corresponding to the
         # legend proxy line, and toggle the visibility
         legline = event.artist
@@ -411,6 +500,7 @@ class drawLine(object):
         else:
             legline.set_alpha(0.2)
         self.fig.canvas.draw()
+
 
 def run():
     K_init = mat([
@@ -533,7 +623,7 @@ def run2():
         ])
 
         lump = LumpModel(Molmasses=Molmasses, K_model=K_model, t_resid=3, p=175, Y0=mat(
-            [0.481,0.472,0.047,0,0,0,0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=10.36, n=7)
+            [0.481, 0.472, 0.047, 0, 0, 0, 0]), const_r=8.3145, w_aro=0.472, w_nitro=0, t=685, r_oil=10.36, n=7)
 
         set_printoptions(precision=4, suppress=False)
         t.make_result(K_model, X0_result, 7)
@@ -559,7 +649,8 @@ def run2():
 
 
 class catObj(object):
-    def __init__(self, n, K_model, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t):
+    def __init__(self, n, K_model, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result, withTemp,
+                 Ea, Ka, t):
         self.K_init = K_init
         self.ka_init = ka_init
         self.kn_init = kn_init
@@ -570,84 +661,97 @@ class catObj(object):
         self.X0_result = X0_result
         self.n = n
         self.K_model = K_model
-        self.withTemp=withTemp
-        self.Ea=Ea
-        self.Ka =Ka
-        self.t=t
+        self.withTemp = withTemp
+        self.Ea = Ea
+        self.Ka = Ka
+        self.t = t
 
 
-def saveCat(filename, n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t):
-    if filename[-4:]=='.cat':
+def saveCat(filename, n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result, withTemp, Ea,
+            Ka, t):
+    if filename[-4:] == '.cat':
         fileObject = open(filename, 'wb')
     else:
         fileObject = open('%s.cat' % filename, 'wb')
-    #          n, K_model, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t
-    a = catObj(n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t)
+    # n, K_model, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result,withTemp,Ea,Ka,t
+    a = catObj(n, lump, K_init, ka_init, kn_init, const_cata_init, tool, tol, optMethod, X0_result, withTemp, Ea, Ka, t)
     pickle.dump(a, fileObject)
     fileObject.close()
 
 
 def loadCat(filename):
-
     fileObject = open('/home/dun/opt/htdocs/lump/%s.cat' % filename, 'r')
     return pickle.load(fileObject)
 
-def getEa(K1,K2,t1,t2,R=8.3145):
-    Ea = (R*t1*t2/(t1-t2))*log(K1/K2)
-    Ea[-2]=0
-    return [Ea,multiply(K1,(math.e**(Ea/(t1*R))))]
-def getKByT(Ka,Ea,t,R=8.3145):
-    return multiply(Ka,(math.e**(-1*Ea/(t*R))))
-def newBest(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,stepLength,target):
-    result={}
+
+def getEa(K1, K2, t1, t2, R=8.3145):
+    Ea = (R * t1 * t2 / (t1 - t2)) * log(K1 / K2)
+    Ea[-2] = 0
+    return [Ea, multiply(K1, (math.e ** (Ea / (t1 * R))))]
+
+
+def getKByT(Ka, Ea, t, R=8.3145):
+    return multiply(Ka, (math.e ** (-1 * Ea / (t * R))))
+
+
+def newBest(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, stepLength, target):
+    result = {}
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
     # catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
-    #TODO:noWithTemp
-    args = {'lump':lump,'targets':target,'Ka':catObj.Ka,'Ea':catObj.Ea,'stepLength':stepLength}
-    bounds = array([t,p,r_oil,t_resid])
-    if not catObj.withTemp:
-        pass
+    # TODO:noWithTemp
+    args = {'lump': lump, 'targets': target, 'Ka': catObj.Ka, 'Ea': catObj.Ea, 'stepLength': stepLength,'withTemp':catObj.withTemp,'X0': catObj.X0_result}
+    bounds = array([t, p, r_oil, t_resid])
+
+    X0_result = optimize.minimize(
+        objForBest,
+        x0=array([(t[0] + t[1]) / 2, (p[0] + p[1]) / 2, (r_oil[0] + r_oil[1]) / 2, (t_resid[0] + t_resid[1]) / 2]),
+        args=(args,), bounds=bounds, method=catObj.optMethod, tol=catObj.tol).x
+    lump.t, lump.p, lump.r_oil, lump.t_resid = X0_result
+    if catObj.withTemp:
+        X0 = getKByT(catObj.Ka, catObj.Ea, lump.t, R=8.3145)
     else:
-        X0_result = optimize.minimize(
-            objForBest, x0=array([(t[0]+t[1])/2,(p[0]+p[1])/2,(r_oil[0]+r_oil[1])/2,(t_resid[0]+t_resid[1])/2]), args=(args,), bounds=bounds, method=catObj.optMethod, tol=catObj.tol).x
-        lump.t, lump.p, lump.r_oil,lump.t_resid =X0_result
-        X0=getKByT(catObj.Ka, catObj.Ea, lump.t, R=8.3145)
-        Y_result = lump.result_for_forecast(X0,stepLength)[0]
-        sum=0
-        for i in target:
-            i = int(i) - 1
-            sum += Y_result[0, i]
-        result={'bestT':lump.t,'bestP':lump.p,'bestR':lump.r_oil,'bestTime':lump.t_resid,'sum':sum,'Y':Y_result[0]}
+        X0 = catObj.X0_result
+    Y_result = lump.result_for_forecast(X0, stepLength)[0]
+    sum = 0
+    for i in target:
+        i = int(i) - 1
+        sum += Y_result[0, i]
+    result = {'bestT': lump.t, 'bestP': lump.p, 'bestR': lump.r_oil, 'bestTime': lump.t_resid, 'sum': sum,
+              'Y': Y_result[0]}
 
     return result
 
+
 def newCatNoKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
-           n):
+               n):
     t = Tools()
-    t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init,[0,10],[0,1],[0,1],[0,1])
+    t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init, [0, 10], [0, 1], [0, 1], [0, 0.1])
     t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors)
     X0_result = optimize.minimize(
         obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
-    withTemp=0
-    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_result,withTemp,mat([]),mat([]),factors[0]['t'])
+    withTemp = 0
+    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init, t, tol, optMethod, X0_result, withTemp,
+            mat([]), mat([]), factors[0]['t'])
+
+
 def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, optMethod, tol,
-           n):
+                 n):
     X0_results = []
     temps = []
-    t=Tools()
+    t = Tools()
 
     for i in factors:
-        if len(temps)==0:
-            t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init, [0, 10], [0, 1], [0, 1], [0, 1])
+        if len(temps) == 0:
+            t.opt_var_constructor(K_init, ka_init, kn_init, const_cata_init, [0, 10], [0, 1], [0, 1], [0, 0.1])
             t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors[i])
             X0_result = optimize.minimize(obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
         else:
             temp = factors[i][0]['t']
             maxTIndex = temps.index(max(temps))
             minTIndex = temps.index(min(temps))
-            init_bounds=[[],[]]
+            init_bounds = [[], []]
             for k in X0_results[0]:
                 init_bounds[0].append(0)
                 init_bounds[1].append(10)
@@ -660,40 +764,42 @@ def newCatWithKa(filename, K_init, ka_init, kn_init, const_cata_init, K_model, M
                 elif temp < temps[j] and temps[j] < temps[upTIndex]:
                     upTIndex = j
 
-            if upTIndex==downTIndex and downTIndex == maxTIndex and temp>temps[maxTIndex]:
+            if upTIndex == downTIndex and downTIndex == maxTIndex and temp > temps[maxTIndex]:
                 X_init = X0_results[maxTIndex]
                 max_bounds = init_bounds[1]
                 min_bounds = X0_results[maxTIndex]
-                kn_bound = [X0_results[maxTIndex][-2],X0_results[maxTIndex][-2]]
-                ka_bound = [X0_results[maxTIndex][-3],X0_results[maxTIndex][-3]]
-                const_cata_bound = [X0_results[maxTIndex][-1],X0_results[maxTIndex][-1]]
+                kn_bound = [X0_results[maxTIndex][-2], X0_results[maxTIndex][-2]]
+                ka_bound = [X0_results[maxTIndex][-3], X0_results[maxTIndex][-3]]
+                const_cata_bound = [X0_results[maxTIndex][-1], X0_results[maxTIndex][-1]]
 
-            elif upTIndex==downTIndex and downTIndex == minTIndex and temp<temps[minTIndex]:
+            elif upTIndex == downTIndex and downTIndex == minTIndex and temp < temps[minTIndex]:
                 X_init = X0_results[minTIndex]
                 max_bounds = X0_results[minTIndex]
                 min_bounds = init_bounds[0]
 
             else:
-                X_init = (X0_results[minTIndex]+X0_results[maxTIndex])/2
+                X_init = (X0_results[minTIndex] + X0_results[maxTIndex]) / 2
                 max_bounds = X0_results[maxTIndex]
                 min_bounds = X0_results[minTIndex]
 
-            print [X_init,max_bounds]
-            t.opt_var_constructor_By_List(X_init,max_bounds,min_bounds)
+            print [X_init, max_bounds]
+            t.opt_var_constructor_By_List(X_init, max_bounds, min_bounds)
             t.obj_para_constructor(Molmasses=Molmasses, K_model=K_model, factors=factors[i])
             X0_result = optimize.minimize(obj, x0=array(t.x0), args=(t,), bounds=t.bounds, method=optMethod, tol=tol).x
-            X0_result[-3]=X0_results[0][-3]
+            X0_result[-3] = X0_results[0][-3]
             X0_result[-2] = X0_results[0][-2]
             X0_result[-1] = X0_results[0][-1]
         X0_results.append(X0_result)
         temps.append(factors[i][0]['t'])
         print X0_results[0]
         # print t.make_result(K_init, X0_results[0], 12)
-    Ea,Ka=getEa(X0_results[0],X0_results[1],temps[0],temps[1],8.3145)
+    Ea, Ka = getEa(X0_results[0], X0_results[1], temps[0], temps[1], 8.3145)
     withTemp = 1
-    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init,t, tol, optMethod, X0_results,withTemp,Ea,Ka,temps)
+    saveCat(filename, n, K_model, K_init, ka_init, kn_init, const_cata_init, t, tol, optMethod, X0_results, withTemp,
+            Ea, Ka, temps)
 
-def new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartConfig,stepLength):
+
+def new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig, stepLength):
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
@@ -702,26 +808,27 @@ def new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
     varMin = chartConfig['varMin']
     varMax = chartConfig['varMax']
     stepNum = int(chartConfig['stepNum'])
-    varRange = [linspace(float(varMin[0]),float(varMax[0]) , num=stepNum),linspace(float(varMin[1]),float(varMax[1]), num=stepNum)]
+    varRange = [linspace(float(varMin[0]), float(varMax[0]), num=stepNum),
+                linspace(float(varMin[1]), float(varMax[1]), num=stepNum)]
     resultId = chartConfig['resultId']
     resultName = chartConfig['resultName']
-    #TODO:nowithTemp
-    X,Y=meshgrid(varRange[0],varRange[1])
+    # TODO:nowithTemp
+    X, Y = meshgrid(varRange[0], varRange[1])
     resultIds = []
     for i in resultId.split(','):
-        resultIds.append(int(i)-1)
+        resultIds.append(int(i) - 1)
     draw = drawLine(varName=varName, lump=lump, resultId=resultIds, factors=catObj,
                     stepLength=stepLength)
 
-    Z =draw.draw3DFunc(X,Y)
+    Z = draw.draw3DFunc(X, Y)
     fig = plts.figure()
     ax = fig.gca(projection='3d')
     surf = ax.plot_surface(X, Y, Z, rstride=1, cstride=1, cmap=cm.coolwarm,
                            linewidth=0, antialiased=False)
 
-    ax.set_xlabel(draw.getXLable(varName[0]),fontsize=10)
-    ax.set_ylabel(draw.getXLable(varName[1]),fontsize=10)
-    ax.set_zlabel('y',fontsize=10)
+    ax.set_xlabel(draw.getXLable(varName[0]), fontsize=10)
+    ax.set_ylabel(draw.getXLable(varName[1]), fontsize=10)
+    ax.set_zlabel('y (%)', fontsize=10)
     ax.zaxis.set_major_locator(LinearLocator(10))
     ax.zaxis.set_major_formatter(FormatStrFormatter('%.02f'))
     plts.tick_params(which='major', labelsize=10)
@@ -731,7 +838,7 @@ def new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
     return 1
 
 
-def new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,chartConfig,stepLength):
+def new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig, stepLength):
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
@@ -745,10 +852,12 @@ def new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
     resultName = (chartConfig['resultName']).split(',')
     if not catObj.withTemp:
         fig, ax = plts.subplots()
-        lines=[]
+        lines = []
         for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj,stepLength=stepLength)
-            line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
+            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i]) - 1, factors=catObj,
+                            stepLength=stepLength)
+            line, = ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2,
+                            label=resultName[int(resultId[i]) - 1])
             lines.append(line)
         leg = ax.legend(loc='upper right', fancybox=True, shadow=True)
         lined = dict()
@@ -756,9 +865,9 @@ def new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
             legline.set_picker(5)  # 5 pts tolerance
             lined[legline] = origline
         ax.set_xlabel(draw.getXLable(varName))
-        ax.set_ylabel('y')
-        draw.lined=lined
-        draw.fig=fig
+        ax.set_ylabel('y (%)')
+        draw.lined = lined
+        draw.fig = fig
         fig.canvas.mpl_connect('pick_event', draw.onpick)
         plts.tick_params(axis='both', which='major', labelsize=20)
         plts.show()
@@ -766,8 +875,10 @@ def new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
         fig, ax = plts.subplots()
         lines = []
         for i in range(len(resultId)):
-            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i])-1, factors=catObj,stepLength=stepLength)
-            line,=ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2, label=resultName[int(resultId[i]) - 1])
+            draw = drawLine(varName=varName, lump=lump, resultId=int(resultId[i]) - 1, factors=catObj,
+                            stepLength=stepLength)
+            line, = ax.plot(varRange, draw.drawFunc(varRange), 'o-', linewidth=2,
+                            label=resultName[int(resultId[i]) - 1])
             lines.append(line)
 
         leg = ax.legend(loc='upper right', fancybox=True, shadow=True)
@@ -777,46 +888,56 @@ def new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,char
             lined[legline] = origline
         ax.set_xlabel(draw.getXLable(varName), fontsize=20)
         ax.set_ylabel('y', fontsize=20)
-        draw.lined=lined
-        draw.fig=fig
+        draw.lined = lined
+        draw.fig = fig
         fig.canvas.mpl_connect('pick_event', draw.onpick)
         plts.tick_params(axis='both', which='major', labelsize=20)
         plts.show()
     return 1
 
 
-
-
-def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n,stepLength):
+def newPre(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, stepLength):
     lump = LumpModel(Molmasses=catObj.tool.Molmasses, K_model=catObj.K_model, t_resid=t_resid, p=p, Y0=Y0,
                      const_r=const_r, w_aro=w_aro, w_nitro=w_nitro, t=t, r_oil=r_oil, n=catObj.n)
     set_printoptions(precision=4, suppress=False)
     # catObj.tool.make_result(catObj.K_model, catObj.X0_result, 7)
     if not catObj.withTemp:
         print 'pre_result='
-        result = lump.result_for_forecast(catObj.X0_result,stepLength)
+        result = lump.result_for_forecast(catObj.X0_result, stepLength)
         print result
         return result
     else:
 
-        X0 = getKByT(catObj.Ka,catObj.Ea,t,R=8.3145)
+        X0 = getKByT(catObj.Ka, catObj.Ea, t, R=8.3145)
         print X0
-        X0[-2]=0
+        X0[-2] = 0
         print 'pre_result='
-        result = lump.result_for_forecast(X0,stepLength)
+        result = lump.result_for_forecast(X0, stepLength)
         print result
         return result
-lumpObj=mat([
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 1, 0, 0, 0, 0],
-        [1, 1, 1, 1, 0, 0, 0],
-        [1, 1, 1, 1, 1, 0, 0],
-        [1, 1, 1, 1, 1, 0, 0]
-    ])
-Molmasses=mat([0.8,1.1,1.8,0.2,0.11,0.058,0.012])
-factors ={797.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 797.15, 'r_oil': 8.9, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.04  ,  0.032 ,  0.008 ,  0.151 ,  0.453 ,  0.2429,  0.0731]]), 't_resid': 3.0}], 807.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 8.5, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.0406 ,  0.03248,  0.00812,  0.143  ,  0.4467 ,  0.2557 ,  0.0734 ]]), 't_resid': 3.0}, {'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 9.2, 'w_aro': 0.472, 'Y0': matrix([[ 0.481,  0.472,  0.047,  0.   ,  0.   ,  0.   ,  0.   ]]), 'Y_results': matrix([[ 0.038 ,  0.0304,  0.0076,  0.142 ,  0.4408,  0.2661,  0.0751]]), 't_resid': 3.0}]}
+
+
+lumpObj = mat([
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0],
+    [1, 1, 1, 0, 0, 0, 0],
+    [1, 1, 1, 1, 0, 0, 0],
+    [1, 1, 1, 1, 1, 0, 0],
+    [1, 1, 1, 1, 1, 0, 0]
+])
+Molmasses = mat([0.8, 1.1, 1.8, 0.2, 0.11, 0.058, 0.012])
+factors = {797.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 797.15, 'r_oil': 8.9, 'w_aro': 0.472,
+                     'Y0': matrix([[0.481, 0.472, 0.047, 0., 0., 0., 0.]]),
+                     'Y_results': matrix([[0.04, 0.032, 0.008, 0.151, 0.453, 0.2429, 0.0731]]), 't_resid': 3.0}],
+           807.15: [{'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 8.5, 'w_aro': 0.472,
+                     'Y0': matrix([[0.481, 0.472, 0.047, 0., 0., 0., 0.]]),
+                     'Y_results': matrix([[0.0406, 0.03248, 0.00812, 0.143, 0.4467, 0.2557, 0.0734]]), 't_resid': 3.0},
+                    {'p': 175.0, 'w_nitro': 0.0, 't': 807.15, 'r_oil': 9.2, 'w_aro': 0.472,
+                     'Y0': matrix([[0.481, 0.472, 0.047, 0., 0., 0., 0.]]),
+                     'Y_results': matrix([[0.038, 0.0304, 0.0076, 0.142, 0.4408, 0.2661, 0.0751]]), 't_resid': 3.0}]}
+
+
 # newCatWithKa('./4.cat',lumpObj, 1, 0, 1, lumpObj, Molmasses, factors, 'L-BFGS-B', 1e-7,
 #                          lumpObj.shape[0])
 # f = open('./4.cat', "r")
@@ -857,5 +978,3 @@ def test():
     optMethod = 'L-BFGS-B'
     tol = 1e-7
     newCat('1', K_init, ka_init, kn_init, const_cata_init, K_model, Molmasses, factors, Y_results, optMethod, tol, n)
-
-
