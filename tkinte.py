@@ -607,14 +607,14 @@ class Example(Frame):
         lbl = Label(frame2, text="结果集（英文逗号分割）")
         lbl.grid(row=5, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.chartResultId = Entry(frame2)
-        self.chartResultId.insert(0, '1,2,3,4,5,6,7')
+        self.chartResultId.insert(0, '5,6,7')
         self.chartResultId.grid(row=5, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="结果名（英文逗号分割\n尽量使用英文）")
         lbl.grid(row=6, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.chartResultName = Entry(frame2)
         #TODO,get the default value from lump model
-        self.chartResultName.insert(0, 'Hs,Ha,Hr,diesel,gasoline,gas,coke')
+        self.chartResultName.insert(0, 'HS,HA,HR,DIESEL,GS,GO,GA,DGAS,LO3,LO4,LPGD,COKE')
         self.chartResultName.grid(row=6, column=8, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="点数")
