@@ -29,7 +29,7 @@ class Example(Frame):
         self.initUIFrame()
 
     def initUIRoot(self):
-        self.parent.title("集总模型")
+        self.parent.title("FCC 集总模型")
         self.pack(fill=BOTH, expand=1)
 
         menubar = Menu(self.parent)
@@ -69,7 +69,7 @@ class Example(Frame):
         rareImg = ImageTk.PhotoImage(file="./imgs/rare.png")
 
         lbl = Label(self.frame0, image=titleImg)
-        lbl.grid(row=0, column=1,columnspan=5,sticky=S)
+        lbl.grid(row=0, column=1,columnspan=5,sticky=S+W)
         lbl.image = titleImg
         lbl = Label(self.frame0, image=rareImg)
         lbl.grid(row=3, column=1,columnspan=5,sticky=S)
@@ -783,7 +783,7 @@ class Example(Frame):
         return filename
 
     def onHelp(self):
-        mbox.showinfo("集总模型软件", "中国石油\n兰州化工研究中心")
+        mbox.showinfo("FCC集总模型软件", "中国石油\n兰州化工研究中心")
 
     def doPre(self):
         catObj = self.catObj

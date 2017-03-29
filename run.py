@@ -164,7 +164,7 @@ class Example(Frame):
         lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.T_input = Entry(frame2)
         if not self.catObj.withTemp:
-            self.T_input.insert(0, self.catObj.t)
+            self.T_input.insert(0, '%f,%f'%(self.catObj.t,self.catObj.t))
             self.T_input.configure(state='readonly')
         self.T_input.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
@@ -393,6 +393,7 @@ class Example(Frame):
         factor_Tree.column("t_resid", width=self.winfo_width() / 8)
         factor_Tree.grid(row=0, column=0, pady=4, padx=5)
         self.factor_Tree = factor_Tree
+
         frame2 = Frame(self.frame0, relief=RAISED, borderwidth=1)
         frame2.pack(fill=BOTH, expand=True)
 
