@@ -874,10 +874,10 @@ class Example(Frame):
         if len(self.catFactors) == 1:
             newCatNoKa(filename, self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors.values()[0],
                        'L-BFGS-B',
-                       1e-5, self.lumpObj.shape[0])
+                       1e-7, self.lumpObj.shape[0])
         else:
             newCatWithKa(filename, self.lumpObj, 1, 0, 1, self.lumpObj, self.Molmasses, self.catFactors, 'L-BFGS-B',
-                         1e-5,
+                         1e-7,
                          self.lumpObj.shape[0])
 
     def makeMatrixUI(self, targetTree, catObj):
@@ -887,9 +887,9 @@ class Example(Frame):
             K = numpy.around(self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['K_result'], 4)
             self.makeMatrixOutput(n, targetTree, K)
             targetTree.insert('end', '\n------------------\n重芳烃影响因数：\n')
-            targetTree.insert('end', self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['Ka'])
+            #targetTree.insert('end', self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['Ka'])
             targetTree.insert('end', '\n------------------\n碱氮影响因数：\n')
-            targetTree.insert('end', self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['Kn'])
+            #targetTree.insert('end', self.makeMatrixByResult(catObj.K_model, catObj.X0_result, catObj.n)['Kn'])
             targetTree.insert('end', '\n------------------\n')
 
         else:
