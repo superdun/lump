@@ -166,6 +166,9 @@ missing module named scipy.arange - imported by scipy, scipy.sparse.linalg.isolv
 missing module named scipy.ones - imported by scipy, scipy.sparse.linalg.isolve.minres
 missing module named numpy.float64 - imported by numpy, scipy.optimize.lbfgsb
 missing module named numpy.greater - imported by numpy, scipy.optimize.minpack
+missing module named elementtree - imported by xlrd.xlsx
+missing module named cElementTree - imported by xlrd.xlsx
+missing module named ElementC14N - imported by xml.etree.ElementTree
 missing module named configparser - imported by numpy.distutils.system_info, numpy.distutils.npy_pkg_config
 missing module named 'numpy_distutils.cpuinfo' - imported by numpy.f2py.diagnose
 missing module named 'numpy_distutils.fcompiler' - imported by numpy.f2py.diagnose

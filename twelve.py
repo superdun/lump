@@ -10,6 +10,7 @@ import tkMessageBox as mbox
 import numpy
 import tkFileDialog
 import pickle
+import excelModule
 from test2 import *
 import ttk
 
@@ -158,16 +159,19 @@ class Example(Frame):
         lbl = Label(frame2, text="HS")
         lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HS = Entry(frame2)
+        self.HS.insert(0, 0.481)
         self.HS.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HA")
         lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HA = Entry(frame2)
+        self.HA.insert(0, 0.472)
         self.HA.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HR")
         lbl.grid(row=3, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HR = Entry(frame2)
+        self.HR.insert(0, 0.047)
         self.HR.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="温度范围（K 英文逗号分割 ）")
@@ -199,10 +203,7 @@ class Example(Frame):
         self.yn_input.insert(0, 0.0)
         self.yn_input.grid(row=4, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
-        lbl = Label(frame2, text="重芳烃含量（<1）")
-        lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.ya_input = Entry(frame2)
-        self.ya_input.grid(row=5, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
 
         lbl = Label(frame2, text="微分方程步长")
         lbl.grid(row=0, column=4, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
@@ -365,16 +366,19 @@ class Example(Frame):
         lbl = Label(frame2, text="HS")
         lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HS = Entry(frame2)
+        self.HS.insert(0, 0.481)
         self.HS.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HA")
         lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HA = Entry(frame2)
+        self.HA.insert(0, 0.472)
         self.HA.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HR")
         lbl.grid(row=3, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HR = Entry(frame2)
+        self.HR.insert(0, 0.047)
         self.HR.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
 
@@ -473,6 +477,7 @@ class Example(Frame):
         lbl = Label(frame2, text="停留时间（s）")
         lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.t_input = Entry(frame2)
+        self.t_input.insert(0, 3.0)
         self.t_input.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="温度（K）")
@@ -488,6 +493,7 @@ class Example(Frame):
         lbl = Label(frame2, text="压力（KPa）")
         lbl.grid(row=4, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.p_input = Entry(frame2)
+        self.p_input.insert(0, 175.0)
         self.p_input.grid(row=4, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         lbl = Label(frame2, text="碱氮含量（<1）")
         lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
@@ -497,16 +503,21 @@ class Example(Frame):
         lbl = Label(frame2, text="HS")
         lbl.grid(row=6, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HS = Entry(frame2)
+        self.HS.insert(0, 0.481)
         self.HS.grid(row=6, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HA")
         lbl.grid(row=7, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HA = Entry(frame2)
+        self.HA.insert(0, 0.472)
+
         self.HA.grid(row=7, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HR")
         lbl.grid(row=8, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HR = Entry(frame2)
+        self.HR.insert(0, 0.047)
+
         self.HR.grid(row=8, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
 
@@ -620,6 +631,8 @@ class Example(Frame):
 
         addButton = Button(frame2, command=self.addFactors, text="添加条件")
         addButton.grid(row=13, column=2, sticky=E)
+        addButton = Button(frame2, command=self.importExcel, text="导入EXCEL")
+        addButton.grid(row=13, column=4, sticky=E)
         self.newCatButton = Button(frame2, command=self.newCata, text="开始计算", state=DISABLED)
         self.newCatButton.grid(row=13, column=6, sticky=E)
 
@@ -684,16 +697,19 @@ class Example(Frame):
         lbl = Label(frame2, text="HS")
         lbl.grid(row=1, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HS = Entry(frame2)
+        self.HS.insert(0, 0.481)
         self.HS.grid(row=1, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HA")
         lbl.grid(row=2, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HA = Entry(frame2)
+        self.HA.insert(0, 0.472)
         self.HA.grid(row=2, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="HR")
         lbl.grid(row=3, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.HR = Entry(frame2)
+        self.HR.insert(0, 0.047)
         self.HR.grid(row=3, column=2, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
         lbl = Label(frame2, text="温度（K）")
@@ -723,10 +739,7 @@ class Example(Frame):
         self.yn_input.insert(0, 0.0)
         self.yn_input.grid(row=3, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
 
-        lbl = Label(frame2, text="重芳烃含量（<1）")
-        lbl.grid(row=4, column=4, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        self.ya_input = Entry(frame2)
-        self.ya_input.grid(row=4, column=6, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+
 
         lbl = Label(frame2, text="微分方程步长")
         lbl.grid(row=5, column=0, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
@@ -758,17 +771,17 @@ class Example(Frame):
         self.var.current(0)
         self.var.grid(row=1, column=10, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
 
-        # self.rangeLbl = Label(frame2, text="条件范围")
-        # self.rangeLbl.grid(row=2, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        self.rangeLbl = Label(frame2, text="条件范围")
+        self.rangeLbl.grid(row=2, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         lbl = Label(frame2, text="上限")
-        lbl.grid(row=2, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
-        lbl = Label(frame2, text="下限")
         lbl.grid(row=3, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl = Label(frame2, text="下限")
+        lbl.grid(row=4, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.rangeMin = Entry(frame2)
         self.rangeMax = Entry(frame2)
 
-        self.rangeMin.grid(row=2, column=10, columnspan=1, sticky=W, rowspan=1, pady=4, padx=5)
-        self.rangeMax.grid(row=3, column=10, columnspan=1, sticky=W, rowspan=1, pady=4, padx=5)
+        self.rangeMin.grid(row=3, column=10, columnspan=1, sticky=W, rowspan=1, pady=4, padx=5)
+        self.rangeMax.grid(row=4, column=10, columnspan=1, sticky=W, rowspan=1, pady=4, padx=5)
 
         # lbl = Label(frame2, text="结果集（英文逗号分割）")
         # lbl.grid(row=4, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
@@ -784,9 +797,9 @@ class Example(Frame):
         # self.chartResultName.grid(row=5, column=10, columnspan=3, rowspan=1, sticky=W, pady=4, padx=5)
 
         lbl = Label(frame2, text="点数")
-        lbl.grid(row=4, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
+        lbl.grid(row=5, column=8, columnspan=2, rowspan=1, sticky=E, pady=4, padx=5)
         self.stepNum = Entry(frame2)
-        self.stepNum.grid(row=4, column=10, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
+        self.stepNum.grid(row=5, column=10, columnspan=2, rowspan=1, sticky=W, pady=4, padx=5)
         lbl = Label(frame2, text="待预测组分")
         lbl.grid(row=0, column=13, columnspan=1, rowspan=1, sticky=E, pady=4, padx=5)
 
@@ -984,7 +997,7 @@ class Example(Frame):
         Y0_raw = [self.HS.get(), self.HA.get(), self.HR.get(), 0, 0, 0, 0, 0, 0, 0, 0, 0]
         Y0 = numpy.mat(Y0_raw).astype(numpy.float)
         const_r = 8.3145
-        w_aro = float(self.ya_input.get())
+        w_aro = float(self.HA.get())
         w_nitro = float(self.yn_input.get())
         t = [float(self.T_input.get().split(',')[0]),float(self.T_input.get().split(',')[1])]
         r_oil = [float(self.roil_input.get().split(',')[0]),float(self.roil_input.get().split(',')[1])]
@@ -1007,11 +1020,22 @@ class Example(Frame):
         self.bestR.configure(state='normal')
         self.bestTime.configure(state='normal')
         self.bestSum.configure(state='normal')
+        self.bestP.delete(0, END)
+        self.bestT.delete(0, END)
+        self.bestR.delete(0, END)
+        self.bestTime.delete(0, END)
+        self.bestSum.delete(0, END)
+
         self.bestP.insert('end',round(result['bestP'], 4))
         self.bestT.insert('end',round(result['bestT'], 4))
         self.bestR.insert('end',round(result['bestR'], 4))
         self.bestTime.insert('end',round(result['bestTime'], 4))
         self.bestSum.insert('end',round(result['sum'], 4))
+        self.bestP.configure(state='readonly')
+        self.bestT.configure(state='readonly')
+        self.bestR.configure(state='readonly')
+        self.bestTime.configure(state='readonly')
+        self.bestSum.configure(state='readonly')
         self.makePreResultUI(self.preResult_LB, result['Y'])
     def doChart(self):
         catObj = self.catObj
@@ -1021,7 +1045,7 @@ class Example(Frame):
 
         Y0 = numpy.mat(Y0_raw).astype(numpy.float)
         const_r = 8.3145
-        w_aro = float(self.ya_input.get())
+        w_aro = float(self.HA.get())
         w_nitro = float(self.yn_input.get())
         t = float(self.T_input.get())
         r_oil = float(self.roil_input.get())
@@ -1089,11 +1113,58 @@ class Example(Frame):
 
         print chartConfig
         print [catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig]
-        if len(varName)>1:
+        if type(varName)!=type(""):
             result = new3dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig, stepLength)
 
         else:
             result = new2dChart(catObj, t_resid, p, Y0, const_r, w_aro, w_nitro, t, r_oil, n, chartConfig, stepLength)
+    def importExcel(self):
+        ftypes = [('excel', '*.xls'),('excel', '*.xlsx')]
+        dlg = tkFileDialog.Open(self, filetypes=ftypes)
+        fl = dlg.show()
+        print fl
+        if fl != '':
+            Y0_raw = [self.HS.get(), self.HA.get(), self.HR.get(), 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            t_resid = float(self.t_input.get())
+            w_nitro = float(self.yn_input.get())
+            w_aro = float(self.HA.get())
+            sheet = excelModule.readEXCELFile(fl)
+            resultArray = excelModule.getFactorsFromRealExcel(sheet,t_resid,w_nitro,w_aro,Y0_raw)
+            for i in resultArray:
+                # HS,HA,HR,DIESEL,GS,GO,GA,DGAS,LO3,LO4,LPGD,COKE
+                p = i['p']
+                Y0 = numpy.mat(Y0_raw).astype(numpy.float)
+                Y_results_raw = i['Y_results_raw']
+                Y_results = numpy.mat(Y_results_raw).astype(numpy.float)
+                t = i['t']
+                r_oil = i['r_oil']
+                self.Molmasses = numpy.mat(
+                    [0.8, 1.1, 1.8, 0.2, 0.2, 0.2, 0.11, 0.016, 0.042, 0.056, 0.05, 0.012]).astype(numpy.float)
+                self.factorMonitor.insert('end', "#############################################\n")
+                self.factorMonitor.insert('end', u"温度：%f,压力：%f,停留时间：%f,碱氮：%f\n" % (t, p, t_resid, w_nitro))
+                self.factorMonitor.insert('end', u"初始组成：\n")
+                self.factorMonitor.insert('end', u"HS：%s,HA：%s,HR：%s\n" % (self.HS.get(), self.HA.get(), self.HR.get()))
+                self.factorMonitor.insert('end', u"实际产率：\n")
+                self.factorMonitor.insert('end',
+                                          u"HS：%s,HA：%s,HR：%s,DIESEL：%s,GS：%s,GO：%s,GA：%s,DGAS：%s,LO3：%s,LO4：%s,LPGD：%s,COKE：%s\n"
+                                          % (i['Y_results_raw'][0],i['Y_results_raw'][1],i['Y_results_raw'][2],i['Y_results_raw'][3],
+                                             i['Y_results_raw'][4],i['Y_results_raw'][5],i['Y_results_raw'][6],i['Y_results_raw'][7]
+                                             , i['Y_results_raw'][8],i['Y_results_raw'][9],i['Y_results_raw'][10],i['Y_results_raw'][11])
+                                          )
+                if self.catFactors.has_key(t):
+                    self.catFactors[t].append(
+                        {'t_resid': t_resid, 't': t, 'r_oil': r_oil, 'p': p, 'Y0': Y0, 'Y_results': Y_results,
+                         'w_aro': w_aro,
+                         'w_nitro': w_nitro})
+                else:
+                    self.catFactors[t] = [
+                        {'t_resid': t_resid, 't': t, 'r_oil': r_oil, 'p': p, 'Y0': Y0, 'Y_results': Y_results,
+                         'w_aro': w_aro,
+                         'w_nitro': w_nitro}]
+                print self.catFactors
+                self.varCountT.set(len(self.catFactors))
+                # self.Molmasses_input.configure(state='readonly')
+            self.newCata()
 
     def addFactors(self):
         # HS,HA,HR,DIESEL,GS,GO,GA,DGAS,LO3,LO4,LPGD,COKE
@@ -1214,7 +1285,7 @@ class Example(Frame):
                     'cata_result': cata_result}
 
     def makePreResultUI(self, target, result):
-        target.delete(0.0, END)
+        target.delete(0, END)
         if type(result)!=type([]):
             result=result.tolist()[0]
         danteng = ['HS','HA','HR','DIESEL','GS','GO','GA','DGAS','LO3','LO4','LPGD','COKE']
@@ -1226,6 +1297,7 @@ class Example(Frame):
         f = open(filename, "r")
         obj = pickle.load(f)
         return obj
+
 
 
 def main():

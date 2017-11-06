@@ -14,12 +14,12 @@
 import math
 import ConfigParser
 import json
-
 from numpy import *
 from scipy import optimize
 from RK4 import RK
 
 config = ConfigParser.ConfigParser()
+
 
 
 class LumpModel(object):
